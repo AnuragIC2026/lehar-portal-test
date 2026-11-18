@@ -43,7 +43,8 @@
 
   L.views.dashboard = async (el, ctx) => {
     const u = ctx.user;
-    const head = (sub) => `<div class="page-head">
+    const unreadNotice = `<a class="notice unread-notice" href="#/messages" data-unread-notice hidden>${L.icon('chat')}<strong data-unread-count></strong><span>${u.role === 'admin' ? 'from counsellors' : 'from the Admin team'} · Open Messages</span></a>`;
+    const head = (sub) => unreadNotice + `<div class="page-head">
         <div><h1>Good ${greeting()}, ${esc(u.name.split(' ')[0])}</h1><p class="sub">${esc(sub)}</p></div>
         <div class="actions">${L.can.addLead(u) ? `<button class="btn btn-primary" data-add-lead>${L.icon('plus')}Add lead</button>` : ''}
           <a class="btn" href="#/students">${u.role === 'admin' ? 'View students' : 'My students'}</a></div>

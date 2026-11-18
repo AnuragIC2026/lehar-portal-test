@@ -42,6 +42,8 @@
     { re: /^\/students\/(\d+)$/, view: 'student', nav: 'students', params: ['id'] },
     { re: /^\/reports$/, view: 'reports', nav: 'reports', admin: true },
     { re: /^\/activity$/, view: 'activity', nav: 'activity', admin: true },
+    { re: /^\/messages$/, view: 'messages', nav: 'messages' },
+    { re: /^\/messages\/(\d+)$/, view: 'messages', nav: 'messages', params: ['cid'], admin: true },
     { re: /^\/settings\/users$/, view: 'users', nav: 'users', admin: true },
     { re: /^\/settings\/phases$/, view: 'phases', nav: 'phases', admin: true },
     { re: /^\/settings\/universities$/, view: 'universities', nav: 'universities', admin: true },
@@ -55,9 +57,39 @@
     if (!PUBLIC.includes(parseHash().path)) L.go('#/login');
   };
 
+  /* Pages can register clean-up work (timers, listeners) that runs when the person leaves the page. */
+  let leaveFns = [];
+  L.onLeave = (fn) => leaveFns.push(fn);
+  function runLeave() { const fns = leaveFns; leaveFns = []; fns.forEach((f) => { try { f(); } catch (e) { /* ignore */ } }); }
+
+  /* Unread message badge in the menu, refreshed every 20 seconds and whenever a chat is read. */
+  let unreadTimer = null;
+  L.refreshUnread = async () => {
+    if (!L.state.user || L.state.user.mustChangePassword) return;
+    try {
+      const { total } = await L.api.get('/chat/unread');
+      L.state.unread = total;
+      document.querySelectorAll('[data-unread]').forEach((b) => { b.textContent = total > 99 ? '99+' : String(total); b.hidden = !total; });
+      const notice = document.querySelector('[data-unread-notice]');
+      if (notice) notice.hidden = !total;
+      const n = document.querySelector('[data-unread-count]');
+      if (n) n.textContent = `${total} unread message${total === 1 ? '' : 's'}`;
+    } catch (e) { /* signed out or offline */ }
+  };
+  function startUnreadPolling() {
+    if (unreadTimer) return;
+    unreadTimer = setInterval(L.refreshUnread, 20000);
+    window.addEventListener('storage', L.refreshUnread);
+  }
+  function stopUnreadPolling() {
+    clearInterval(unreadTimer); unreadTimer = null;
+    window.removeEventListener('storage', L.refreshUnread);
+  }
+
   let renderSeq = 0;
   async function render() {
     const seq = ++renderSeq;
+    runLeave();
     const { path, query } = parseHash();
     const app = document.getElementById('app');
     document.getElementById('modal-root').innerHTML = '';
@@ -100,6 +132,7 @@
       if (!r.public && !r.bare) await L.loadRefs();
       if (seq !== renderSeq) return;
       await L.views[r.view](target, ctx);
+      if (!r.public && !r.bare) { startUnreadPolling(); L.refreshUnread(); }
       const h1 = target.querySelector('h1');
       document.title = `${h1 ? h1.textContent + ' · ' : ''}Lehar · Samudra Global`;
     } catch (err) {
@@ -130,7 +163,8 @@
   }
   function navLinks(user) {
     let html = navLink('#/dashboard', 'dashboard', 'dashboard', 'Dashboard') +
-      navLink('#/students', 'students', 'students', user.role === 'admin' ? 'Students' : 'My students');
+      navLink('#/students', 'students', 'students', user.role === 'admin' ? 'Students' : 'My students') +
+      `<a href="#/messages" data-nav="messages">${L.icon('chat')}<span>Messages</span><span class="nav-badge" data-unread hidden>0</span></a>`;
     if (user.role === 'admin') {
       html += navLink('#/reports', 'reports', 'reports', 'Reports') +
         navLink('#/activity', 'activity', 'clock', 'Activity log') +
@@ -172,6 +206,8 @@
     const action = btn.dataset.action;
     if (action === 'open-nav') { e.stopPropagation(); document.querySelector('.shell').classList.add('nav-open'); }
     if (action === 'logout') {
+      stopUnreadPolling();
+      runLeave();
       await L.api.post('/auth/logout').catch(() => {});
       L.state.user = null; L.state.refs = null;
       document.getElementById('app').innerHTML = '';
@@ -180,6 +216,8 @@
     if (action === 'change-password') L.go('#/change-password');
     if (action === 'reset-demo') {
       if (await L.confirm('Reset demo data?', 'This puts back the original sample students and signs you out. Changes you made in the demo will be lost.', { confirmLabel: 'Reset demo' })) {
+        stopUnreadPolling();
+        runLeave();
         L.apiDemo.reset();
         L.state.user = null; L.state.refs = null;
         document.getElementById('app').innerHTML = '';

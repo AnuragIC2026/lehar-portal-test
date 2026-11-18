@@ -11,4 +11,6 @@ This repository holds the **demo** only. On GitHub Pages it runs entirely in the
 
 The sample data also includes a second counsellor (priya@icsoln.com / Counsellor123) and sample sign-in history for the Activity log.
 
+To try the chat, open the demo in two browser tabs: sign in as Admin in one and Counsellor in the other.
+
 The live version (Node.js + MySQL) uses the same front end and is deployed separately on the VPS.

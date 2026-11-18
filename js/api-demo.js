@@ -3,7 +3,7 @@
    so the demo behaves like the real portal. Emails go to a "Demo outbox" page instead of being sent. */
 (function () {
   const L = (window.L = window.L || {});
-  const KEY = 'lehar-demo-v4';
+  const KEY = 'lehar-demo-v5';
   const SESSION_KEY = 'lehar-demo-session';
   const MAX_STORED_FILE = 1.5 * 1024 * 1024;
   const MAX_UPLOAD = 10 * 1024 * 1024;
@@ -16,7 +16,7 @@
   let db = null;
   function load() {
     try { db = JSON.parse(localStorage.getItem(KEY)); } catch (e) { db = null; }
-    if (!db || db.v !== 4) { db = seed(); save(); }
+    if (!db || db.v !== 5) { db = seed(); save(); }
   }
   function save() {
     try { localStorage.setItem(KEY, JSON.stringify(db)); }
@@ -26,7 +26,7 @@
   const now = () => L.nowIST();
   function httpErr(status, message, code) { return Object.assign(new Error(message), { status, code }); }
   const sessionUser = () => {
-    const id = Number(localStorage.getItem(SESSION_KEY));
+    const id = Number(sessionStorage.getItem(SESSION_KEY));
     const u = db.users.find((x) => x.id === id);
     return u && u.active ? u : null;
   };
@@ -39,7 +39,7 @@
     return d.toISOString().slice(0, 19).replace('T', ' ');
   }
   function seed() {
-    const s = { v: 4, seq: {}, users: [], phases: [], universities: [], students: [], studentPhases: [], applications: [], documents: [], activity: [], logins: [], outbox: [], otps: [] };
+    const s = { v: 5, seq: {}, users: [], phases: [], universities: [], students: [], studentPhases: [], applications: [], documents: [], activity: [], logins: [], chat: [], chatReads: {}, outbox: [], otps: [] };
     const id = (t) => (s.seq[t] = (s.seq[t] || 0) + 1);
     const user = (name, email, password, role) => { const u = { id: id('users'), name, email, password, role, mustChange: false, active: true, createdAt: daysAgo(60), lastLoginAt: null }; s.users.push(u); return u; };
     // The three demo logins
@@ -184,6 +184,17 @@
     s.seq.logins = s.logins.length;
     s.users.forEach((u) => { const last = s.logins.filter((l) => l.userId === u.id && l.event === 'login').pop(); u.lastLoginAt = last ? last.createdAt : null; });
 
+    // Sample chats: one conversation per counsellor with the Admin team
+    const say = (cid, from, body, at) => { const m = { id: id('chat'), counsellorId: cid.id, senderId: from.id, body, createdAt: at }; s.chat.push(m); return m; };
+    const c1 = say(manager, admin, 'Hi! Meera Shetty’s transcripts are still pending. Can you get them uploaded by Friday?', daysAgo(2, 11, 20));
+    const c2 = say(manager, manager, 'Yes, her college is sending them on Thursday. I’ll upload them as soon as they arrive.', daysAgo(2, 11, 34));
+    s.chatReads[`${admin.id}:${manager.id}`] = c2.id;
+    const c3 = say(manager, admin, 'Thanks. Also, the new walk-in lead Ananya Rao wants MS in Computer Science in the USA. Please call her today.', daysAgo(0, 9, 5));
+    s.chatReads[`${manager.id}:${manager.id}`] = c2.id; // c3 is unread for the counsellor
+    say(priya, priya, 'Hello Admin, could you assign the new Instagram lead (Farhan Ali) to me? He asked for Australia and New Zealand.', daysAgo(0, 10, 15));
+    s.chatReads[`${priya.id}:${priya.id}`] = s.seq.chat;
+    void c1; void c3;
+
     s.activity.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
     s.activity.forEach((a, i) => { a.id = i + 1; });
     s.seq.activity = s.activity.length;
@@ -268,14 +279,14 @@
     }
     u.lastLoginAt = now();
     recordLogin(u, email, 'login');
-    localStorage.setItem(SESSION_KEY, String(u.id));
+    sessionStorage.setItem(SESSION_KEY, String(u.id));
     save();
     return { user: publicUser(u) };
   }, { auth: false });
   route('POST', '/auth/logout', () => {
     const u = sessionUser();
     if (u) { recordLogin(u, u.email, 'logout'); save(); }
-    localStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
     return { ok: true };
   }, { auth: false });
   route('GET', '/auth/me', () => {
@@ -781,12 +792,70 @@
     save();
     return { ok: true, updated: changed.length };
   });
+  // Chat: one conversation per counsellor (identified by the counsellor's id) with the Admin team
+  const chatThread = (u, cid) => {
+    cid = Number(cid);
+    if (u.role === 'manager' && cid !== u.id) throw httpErr(404, 'Conversation not found.');
+    const c = db.users.find((x) => x.id === cid && x.role === 'manager');
+    if (!c) throw httpErr(404, 'Conversation not found.');
+    return c;
+  };
+  const readOf = (userId, cid) => (db.chatReads || {})[`${userId}:${cid}`] || 0;
+  const setRead = (userId, cid, id) => { db.chatReads = db.chatReads || {}; const k = `${userId}:${cid}`; db.chatReads[k] = Math.max(db.chatReads[k] || 0, id); };
+  const unreadIn = (u, cid) => (db.chat || []).filter((m) => m.counsellorId === cid && m.id > readOf(u.id, cid)
+    && (u.role === 'admin' ? m.senderId === cid : m.senderId !== u.id)).length;
+  const chatMsg = (m) => { const s2 = db.users.find((x) => x.id === m.senderId); return { ...m, senderName: s2 ? s2.name : 'Former user', senderRole: s2 ? s2.role : null }; };
+  route('GET', '/chat/unread', (b, q, u) => {
+    const cids = u.role === 'admin' ? db.users.filter((x) => x.role === 'manager').map((x) => x.id) : [u.id];
+    return { total: cids.reduce((n, cid) => n + unreadIn(u, cid), 0) };
+  });
+  route('GET', '/chat/threads', (b, q, u) => {
+    requireRole(u, 'admin');
+    const threads = db.users.filter((x) => x.role === 'manager').map((c) => {
+      const msgs = (db.chat || []).filter((m) => m.counsellorId === c.id);
+      const last = msgs[msgs.length - 1];
+      return { counsellorId: c.id, name: c.name, email: c.email, active: c.active, unread: unreadIn(u, c.id),
+        lastMessage: last ? { body: last.body.slice(0, 140), senderId: last.senderId, senderName: userName(last.senderId), createdAt: last.createdAt } : null };
+    }).filter((t) => t.active || t.lastMessage)
+      .sort((a, c) => String(c.lastMessage ? c.lastMessage.createdAt : '').localeCompare(String(a.lastMessage ? a.lastMessage.createdAt : '')) || a.name.localeCompare(c.name));
+    return { threads };
+  });
+  route('GET', '/chat/threads/:cid/messages', (b, q, u, p) => {
+    const c = chatThread(u, p.cid);
+    const all = (db.chat || []).filter((m) => m.counsellorId === c.id);
+    const limit = Math.min(Number(q.limit) || 60, 200);
+    let rows;
+    if (Number(q.after)) rows = all.filter((m) => m.id > Number(q.after)).slice(0, limit);
+    else { const pool = Number(q.before) ? all.filter((m) => m.id < Number(q.before)) : all; rows = pool.slice(-limit); }
+    const otherReadId = u.role === 'admin' ? readOf(c.id, c.id)
+      : Math.max(0, ...db.users.filter((x) => x.role === 'admin').map((a) => readOf(a.id, c.id)));
+    return { counsellor: { id: c.id, name: c.name, email: c.email, active: c.active }, messages: rows.map(chatMsg), otherReadId,
+      hasOlder: !Number(q.after) && rows.length > 0 && all.some((m) => m.id < rows[0].id) };
+  });
+  route('POST', '/chat/threads/:cid/messages', (b, q, u, p) => {
+    const c = chatThread(u, p.cid);
+    const body = String(b.body || '').replace(/\r\n/g, '\n').trim();
+    if (!body) throw httpErr(400, 'Type a message first.');
+    if (body.length > 2000) throw httpErr(400, 'Messages can be up to 2000 characters.');
+    if (!c.active) throw httpErr(400, 'This counsellor account is deactivated.');
+    db.chat = db.chat || [];
+    const m = { id: nextId('chat'), counsellorId: c.id, senderId: u.id, body, createdAt: now() };
+    db.chat.push(m);
+    setRead(u.id, c.id, m.id);
+    save();
+    return { message: chatMsg(m) };
+  });
+  route('POST', '/chat/threads/:cid/read', (b, q, u, p) => {
+    const c = chatThread(u, p.cid);
+    if (Number(b.lastId) > 0) { setRead(u.id, c.id, Number(b.lastId)); save(); }
+    return { ok: true };
+  });
   route('GET', '/demo/outbox', (b, q, u) => { requireRole(u, 'admin'); return { emails: db.outbox }; });
 
   /* ---------- Dispatcher ---------- */
   async function request(method, fullPath, body) {
     if (!db) load();
-    else { try { const fresh = JSON.parse(localStorage.getItem(KEY)); if (fresh && fresh.v === 4) db = fresh; } catch (e) { /* keep memory copy */ } }
+    else { try { const fresh = JSON.parse(localStorage.getItem(KEY)); if (fresh && fresh.v === 5) db = fresh; } catch (e) { /* keep memory copy */ } }
     const [path, qs] = fullPath.split('?');
     const q = Object.fromEntries(new URLSearchParams(qs || ''));
     for (const r of routes) {
@@ -893,7 +962,7 @@
             .map((a) => [a.createdAt, userName(a.userId) || '', (db.students.find((s) => s.id === a.studentId) || {}).fullName || '', a.detail]) }
       ]);
     },
-    reset() { localStorage.removeItem(KEY); localStorage.removeItem(SESSION_KEY); db = null; load(); },
+    reset() { localStorage.removeItem(KEY); sessionStorage.removeItem(SESSION_KEY); db = null; load(); },
     accounts: () => [
       { label: 'Admin', email: 'admin@icsoln.com', password: 'Admin123', note: 'Full access' },
       { label: 'Counsellor', email: 'counsellor@icsoln.com', password: 'Counsellor123', note: 'Only students assigned to them' }
