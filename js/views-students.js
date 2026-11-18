@@ -70,7 +70,7 @@
 
     el.innerHTML = `
       <div class="page-head">
-        <div><h1>Students</h1><p class="sub">${u.role === 'manager' ? 'Students assigned to you' : 'Every student and lead'}</p></div>
+        <div><h1>${u.role === 'admin' ? 'Students' : 'My students'}</h1><p class="sub">${u.role === 'manager' ? 'Students the Admin has assigned to you' : 'Every student and lead. Tick students to assign them to a counsellor.'}</p></div>
         <div class="actions">${L.can.addLead(u) ? `<button class="btn btn-primary" data-add>${L.icon('plus')}Add lead</button>` : ''}</div>
       </div>
       <section class="card">
@@ -81,6 +81,13 @@
           <div class="field"><label for="f-country" class="sr-only">Country</label><select id="f-country" name="country">${L.options(L.COUNTRIES.filter((c) => c !== 'Other'), q.country, { blank: 'All countries' })}</select></div>
           <div class="field"><label for="f-intake" class="sr-only">Intake</label><select id="f-intake" name="intake">${L.options(intakes, q.intake, { blank: 'All intakes' })}</select></div>
         </form>
+        ${showManager ? `<div class="bulk-bar" data-bulk hidden>
+          <strong data-bulk-count>0 selected</strong>
+          <label for="bulk-mgr" class="sr-only">Counsellor</label>
+          <select id="bulk-mgr">${L.options(L.managers().map((m) => [m.id, m.name]), '', { blank: 'Choose a counsellor…' })}<option value="none">Remove counsellor (not assigned)</option></select>
+          <button type="button" class="btn btn-primary btn-sm" data-bulk-assign>Assign</button>
+          <button type="button" class="btn-link" data-bulk-clear>Clear selection</button>
+        </div>` : ''}
         <div data-results><div class="empty">Loading…</div></div>
       </section>`;
 
@@ -92,12 +99,42 @@
       const qs = new URLSearchParams(Object.entries(data).filter(([, v]) => v)).toString();
       const res = await L.api.get(`/students${qs ? `?${qs}` : ''}`);
       results.innerHTML = table(res.students, showManager, all.students.length);
+      updateBulk();
+    }
+    const selected = () => [...results.querySelectorAll('input[data-pick]:checked')].map((c) => Number(c.value));
+    function updateBulk() {
+      const bar = el.querySelector('[data-bulk]');
+      if (!bar) return;
+      const n = selected().length;
+      bar.hidden = n === 0;
+      bar.querySelector('[data-bulk-count]').textContent = `${n} selected`;
+      const all = results.querySelector('input[data-pick-all]');
+      const boxes = results.querySelectorAll('input[data-pick]');
+      if (all) { all.checked = n > 0 && n === boxes.length; all.indeterminate = n > 0 && n < boxes.length; }
+    }
+    results.addEventListener('change', (e) => {
+      if (e.target.matches('input[data-pick-all]')) results.querySelectorAll('input[data-pick]').forEach((c) => { c.checked = e.target.checked; });
+      updateBulk();
+    });
+    const bulk = el.querySelector('[data-bulk]');
+    if (bulk) {
+      bulk.querySelector('[data-bulk-clear]').addEventListener('click', () => { results.querySelectorAll('input[data-pick]').forEach((c) => { c.checked = false; }); updateBulk(); });
+      bulk.querySelector('[data-bulk-assign]').addEventListener('click', async (e) => {
+        const v = bulk.querySelector('#bulk-mgr').value;
+        if (!v) return L.toast('Choose a counsellor first.', 'err');
+        e.target.disabled = true;
+        try {
+          const res = await L.api.post('/students/assign', { studentIds: selected(), managerId: v === 'none' ? null : Number(v) });
+          L.toast(res.updated ? `${res.updated} student${res.updated === 1 ? '' : 's'} updated.` : 'Those students were already assigned there.');
+          await load();
+        } catch (err) { L.fail(err); } finally { e.target.disabled = false; }
+      });
     }
     let timer;
     form.addEventListener('input', (e) => { clearTimeout(timer); timer = setTimeout(() => load().catch(L.fail), e.target.type === 'search' ? 250 : 0); });
     form.addEventListener('submit', (e) => { e.preventDefault(); load().catch(L.fail); });
     results.addEventListener('click', (e) => {
-      if (e.target.closest('a')) return;
+      if (e.target.closest('a, input, label, td.check, th.check')) return;
       const tr = e.target.closest('tr[data-id]');
       if (tr) L.go(`#/students/${tr.dataset.id}`);
     });
@@ -110,9 +147,10 @@
     if (!list.length) return `<div class="empty">${total ? 'No students match these filters.' : 'No students yet. Use “Add lead” to add the first one.'}</div>`;
     return `<div class="table-wrap"><table>
       <caption class="sr-only">Students</caption>
-      <thead><tr><th>Student</th><th>Phase</th>${showManager ? '<th class="hide-sm">Counsellor</th>' : ''}<th class="hide-sm">Countries</th><th class="hide-sm">Intake</th>
+      <thead><tr>${showManager ? '<th class="check"><input type="checkbox" data-pick-all aria-label="Select all students shown"></th>' : ''}<th>Student</th><th>Phase</th>${showManager ? '<th class="hide-sm">Counsellor</th>' : ''}<th class="hide-sm">Countries</th><th class="hide-sm">Intake</th>
         <th class="num">Docs to review</th><th class="num">Offers</th><th class="hide-sm">Updated</th></tr></thead>
       <tbody>${list.map((s) => `<tr class="clickable" data-id="${s.id}">
+        ${showManager ? `<td class="check"><input type="checkbox" data-pick value="${s.id}" aria-label="Select ${esc(s.fullName)}"></td>` : ''}
         <td><div class="cell-title"><a href="#/students/${s.id}">${esc(s.fullName)}</a></div><div class="small soft">${esc(s.phone || '')}${s.city ? ` · ${esc(s.city)}` : ''}</div></td>
         <td>${L.phasePill(s.currentPhaseName)}</td>
         ${showManager ? `<td class="hide-sm">${s.managerName ? esc(s.managerName) : '<span class="soft">Not assigned</span>'}</td>` : ''}

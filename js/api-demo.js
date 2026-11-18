@@ -3,7 +3,7 @@
    so the demo behaves like the real portal. Emails go to a "Demo outbox" page instead of being sent. */
 (function () {
   const L = (window.L = window.L || {});
-  const KEY = 'lehar-demo-v3';
+  const KEY = 'lehar-demo-v4';
   const SESSION_KEY = 'lehar-demo-session';
   const MAX_STORED_FILE = 1.5 * 1024 * 1024;
   const MAX_UPLOAD = 10 * 1024 * 1024;
@@ -16,7 +16,7 @@
   let db = null;
   function load() {
     try { db = JSON.parse(localStorage.getItem(KEY)); } catch (e) { db = null; }
-    if (!db || db.v !== 3) { db = seed(); save(); }
+    if (!db || db.v !== 4) { db = seed(); save(); }
   }
   function save() {
     try { localStorage.setItem(KEY, JSON.stringify(db)); }
@@ -39,13 +39,14 @@
     return d.toISOString().slice(0, 19).replace('T', ' ');
   }
   function seed() {
-    const s = { v: 3, seq: {}, users: [], phases: [], universities: [], students: [], studentPhases: [], applications: [], documents: [], activity: [], outbox: [], otps: [] };
+    const s = { v: 4, seq: {}, users: [], phases: [], universities: [], students: [], studentPhases: [], applications: [], documents: [], activity: [], logins: [], outbox: [], otps: [] };
     const id = (t) => (s.seq[t] = (s.seq[t] || 0) + 1);
     const user = (name, email, password, role) => { const u = { id: id('users'), name, email, password, role, mustChange: false, active: true, createdAt: daysAgo(60), lastLoginAt: null }; s.users.push(u); return u; };
     // The three demo logins
     const admin = user('Admin', 'admin@icsoln.com', 'Admin123', 'admin');
     const manager = user('Counsellor', 'counsellor@icsoln.com', 'Counsellor123', 'manager');
-    user('User', 'user@icsoln.com', 'User123', 'viewer');
+    // A second sample counsellor, to show several counsellors working side by side
+    const priya = user('Priya Nair', 'priya@icsoln.com', 'Counsellor123', 'manager');
 
     ['Lead', 'Counselling', 'Document review', 'University shortlist', 'Applications', 'SOP / LOR', 'Offer', 'Visa apply', 'Visa result', 'Pre-departure', 'Departed']
       .forEach((name, i) => s.phases.push({ id: id('phases'), name, sortOrder: i + 1, isVisaResult: name === 'Visa result', active: true }));
@@ -67,15 +68,15 @@
     // [name, phone, city, source, countries, course, intake, budget, parent, counsellor, phase, daysAgoAdded]
     const people = [
       ['Ananya Rao', '98450 11223', 'Bengaluru', 'Walk-in', ['USA'], 'MS Computer Science', 'Fall 2027', '₹40–50 lakh', 'Suresh Rao', manager, 'Lead', 2],
-      ['Karthik Iyer', '99001 44556', 'Bengaluru', 'Instagram', ['Canada'], 'PG Diploma, Project Management', 'Sep 2027', '₹20–25 lakh', 'Lakshmi Iyer', manager, 'Counselling', 5],
+      ['Karthik Iyer', '99001 44556', 'Bengaluru', 'Instagram', ['Canada'], 'PG Diploma, Project Management', 'Sep 2027', '₹20–25 lakh', 'Lakshmi Iyer', priya, 'Counselling', 5],
       ['Meera Shetty', '98862 77889', 'Mangaluru', 'Referral', ['UK', 'Ireland'], 'MSc Data Science', 'Sep 2027', '₹25–30 lakh', 'Ramesh Shetty', manager, 'Document review', 12],
-      ['Rohan Gowda', '97411 22334', 'Mysuru', 'Website', ['Germany'], 'MSc Mechanical Engineering', 'Winter 2027', '₹15–20 lakh', 'Manjunath Gowda', manager, 'University shortlist', 20],
+      ['Rohan Gowda', '97411 22334', 'Mysuru', 'Website', ['Germany'], 'MSc Mechanical Engineering', 'Winter 2027', '₹15–20 lakh', 'Manjunath Gowda', priya, 'University shortlist', 20],
       ['Sneha Kulkarni', '98440 55667', 'Hubballi', 'Event / seminar', ['USA', 'Canada'], 'MS Business Analytics', 'Fall 2027', '₹40 lakh', 'Vinay Kulkarni', manager, 'Applications', 34],
-      ['Aditya Menon', '99459 88990', 'Bengaluru', 'Phone call', ['Australia'], 'Master of IT', 'Feb 2027', '₹35 lakh', 'Sunil Menon', manager, 'SOP / LOR', 41],
+      ['Aditya Menon', '99459 88990', 'Bengaluru', 'Phone call', ['Australia'], 'Master of IT', 'Feb 2027', '₹35 lakh', 'Sunil Menon', priya, 'SOP / LOR', 41],
       ['Divya Prakash', '97390 11447', 'Bengaluru', 'Referral', ['UK'], 'MSc Finance', 'Jan 2027', '₹30 lakh', 'Prakash K', manager, 'Offer', 55],
-      ['Nikhil Reddy', '98455 66771', 'Kolar', 'Walk-in', ['Canada'], 'MEng Electrical', 'Jan 2027', '₹30 lakh', 'Srinivas Reddy', manager, 'Visa apply', 70],
+      ['Nikhil Reddy', '98455 66771', 'Kolar', 'Walk-in', ['Canada'], 'MEng Electrical', 'Jan 2027', '₹30 lakh', 'Srinivas Reddy', priya, 'Visa apply', 70],
       ['Pooja Hegde', '99860 33448', 'Udupi', 'Instagram', ['Ireland'], 'MSc Marketing', 'Jan 2027', '₹25 lakh', 'Ganesh Hegde', manager, 'Visa result', 90],
-      ['Varun Bhat', '97412 99001', 'Bengaluru', 'Website', ['USA'], 'MS Data Science', 'Fall 2026', '₹45 lakh', 'Mohan Bhat', manager, 'Pre-departure', 150],
+      ['Varun Bhat', '97412 99001', 'Bengaluru', 'Website', ['USA'], 'MS Data Science', 'Fall 2026', '₹45 lakh', 'Mohan Bhat', priya, 'Pre-departure', 150],
       ['Ishita Sharma', '98451 20202', 'Bengaluru', 'Referral', ['New Zealand'], 'Master of Engineering', 'Jul 2026', '₹28 lakh', 'Ajay Sharma', manager, 'Departed', 220],
       ['Farhan Ali', '99000 12121', 'Bengaluru', 'Facebook', ['Australia', 'New Zealand'], 'Master of Nursing', 'Jul 2027', '₹30 lakh', 'Imran Ali', null, 'Lead', 1]
     ];
@@ -84,7 +85,7 @@
       const [fullName, phone, city, leadSource, countries, course, intake, budget, parentName, mgr, phaseName, added] = p;
       const createdAt = daysAgo(added, 10 + (i % 6), (i * 7) % 60);
       const st = { id: id('students'), fullName, phone, email: `${fullName.split(' ')[0].toLowerCase()}.${fullName.split(' ')[1].toLowerCase()}@example.com`,
-        city, leadSource, countries, course, intake, budget, parentName, parentPhone: phone.replace(/^9/, '8'), notes: '',
+        city, leadSource, countries, course, intake, budget, parentName, parentPhone: phone.replace(/^9/, '8'), notes: null,
         managerId: mgr ? mgr.id : null, currentPhaseId: P(phaseName), createdBy: (mgr || admin).id, createdAt, updatedAt: createdAt };
       s.students.push(st);
       log(st.id, (mgr || admin).id, 'lead_created', `Lead added (${leadSource})`, createdAt);
@@ -156,6 +157,33 @@
     const rejectedDoc = s.documents.find((d) => d.studentId === meera.id && d.docType === 'Degree certificate');
     if (rejectedDoc) { rejectedDoc.status = 'rejected'; rejectedDoc.reviewComment = 'Scan is cut off at the bottom — please re-upload the full page.'; }
 
+    // Admin set up the two counsellors
+    log(null, admin.id, 'user_created', 'Added Counsellor Counsellor (counsellor@icsoln.com)', daysAgo(60, 10, 5));
+    log(null, admin.id, 'user_created', 'Added Counsellor Priya Nair (priya@icsoln.com)', daysAgo(60, 10, 9));
+
+    // Sign-in history for the last 10 days
+    const ua = {
+      win: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36',
+      mac: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15',
+      android: 'Mozilla/5.0 (Linux; Android 14; SM-A546E) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Mobile Safari/537.36'
+    };
+    const ev = (u, event, at, agent, ip) => s.logins.push({ id: id('logins'), userId: u ? u.id : null, email: u ? u.email : 'unknown@gmail.com', event, ip, userAgent: agent, createdAt: at });
+    const nowHour = Number(new Date(Date.now() + 5.5 * 3600 * 1000).toISOString().slice(11, 13));
+    for (let d = 9; d >= 1; d--) {
+      if (d % 7 === 0) continue; // a day off
+      ev(manager, 'login', daysAgo(d, 9, 30 + d), ua.win, '106.51.72.18');
+      ev(manager, 'logout', daysAgo(d, 18, 10 + d), ua.win, '106.51.72.18');
+      ev(priya, 'login', daysAgo(d, 10, 5 + d), d % 2 ? ua.android : ua.mac, '49.207.193.4');
+      if (d % 3) ev(priya, 'logout', daysAgo(d, 17, 40), d % 2 ? ua.android : ua.mac, '49.207.193.4');
+      ev(admin, 'login', daysAgo(d, 11, 15), ua.mac, '103.86.181.20');
+    }
+    ev(priya, 'failed', daysAgo(3, 10, 2), ua.android, '49.207.193.4');
+    ev(null, 'failed', daysAgo(2, 23, 47), ua.win, '185.220.101.9');
+    if (nowHour >= 1) ev(manager, 'login', daysAgo(0, Math.max(0, nowHour - 1), 12), ua.win, '106.51.72.18');
+    s.logins.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1)).forEach((l, i) => { l.id = i + 1; });
+    s.seq.logins = s.logins.length;
+    s.users.forEach((u) => { const last = s.logins.filter((l) => l.userId === u.id && l.event === 'login').pop(); u.lastLoginAt = last ? last.createdAt : null; });
+
     s.activity.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
     s.activity.forEach((a, i) => { a.id = i + 1; });
     s.seq.activity = s.activity.length;
@@ -163,7 +191,7 @@
   }
 
   /* ---------- Rules shared with the server ---------- */
-  const viewAll = (u) => u.role === 'admin' || u.role === 'viewer';
+  const viewAll = (u) => u.role === 'admin';
   const visibleStudents = (u) => db.students.filter((s) => viewAll(u) || s.managerId === u.id);
   function studentFor(u, id, { edit = false } = {}) {
     const s = db.students.find((x) => x.id === Number(id));
@@ -179,6 +207,11 @@
     db.activity.push({ id: nextId('activity'), studentId, userId, action, detail, createdAt: now() });
     const s = db.students.find((x) => x.id === studentId);
     if (s) s.updatedAt = now();
+  }
+  function recordLogin(u, email, event) {
+    db.logins = db.logins || [];
+    db.logins.push({ id: nextId('logins'), userId: u ? u.id : null, email: String(email || '').slice(0, 190), event,
+      ip: 'demo (this browser)', userAgent: navigator.userAgent.slice(0, 250), createdAt: now() });
   }
   function notify({ student, actor, subject, title, lines, important = false }) {
     const to = [];
@@ -229,13 +262,22 @@
   route('POST', '/auth/login', (b) => {
     const email = String(b.email || '').trim().toLowerCase();
     const u = db.users.find((x) => x.email === email);
-    if (!u || !u.active || u.password !== String(b.password || '')) throw httpErr(401, 'Email or password is incorrect.');
+    if (!u || !u.active || u.password !== String(b.password || '')) {
+      recordLogin(u, email, 'failed'); save();
+      throw httpErr(401, 'Email or password is incorrect.');
+    }
     u.lastLoginAt = now();
+    recordLogin(u, email, 'login');
     localStorage.setItem(SESSION_KEY, String(u.id));
     save();
     return { user: publicUser(u) };
   }, { auth: false });
-  route('POST', '/auth/logout', () => { localStorage.removeItem(SESSION_KEY); return { ok: true }; }, { auth: false });
+  route('POST', '/auth/logout', () => {
+    const u = sessionUser();
+    if (u) { recordLogin(u, u.email, 'logout'); save(); }
+    localStorage.removeItem(SESSION_KEY);
+    return { ok: true };
+  }, { auth: false });
   route('GET', '/auth/me', () => {
     const u = sessionUser();
     if (!u) throw httpErr(401, 'Please sign in.');
@@ -285,17 +327,20 @@
   route('GET', '/users/lite', () => ({ users: db.users.map((u) => ({ id: u.id, name: u.name, role: u.role, active: u.active })).sort((a, b) => a.name.localeCompare(b.name)) }));
   route('GET', '/users', (b, q, u) => {
     requireRole(u, 'admin');
-    return { users: db.users.map((x) => ({ ...publicUser(x), studentCount: db.students.filter((s) => s.managerId === x.id).length, lastLoginAt: x.lastLoginAt, createdAt: x.createdAt })) };
+    const cutoff = daysAgo(30, 0, 0);
+    return { users: db.users.map((x) => ({ ...publicUser(x), studentCount: db.students.filter((s) => s.managerId === x.id).length, lastLoginAt: x.lastLoginAt,
+      logins30d: db.logins.filter((l) => l.userId === x.id && l.event === 'login' && l.createdAt >= cutoff).length, createdAt: x.createdAt })) };
   });
   route('POST', '/users', (b, q, u) => {
     requireRole(u, 'admin');
     const name = String(b.name || '').trim();
     const email = String(b.email || '').trim().toLowerCase();
-    if (!name || !/^\S+@\S+\.\S+$/.test(email) || !['admin', 'manager', 'viewer'].includes(b.role)) throw httpErr(400, 'Enter a name, a valid email and a role.');
+    if (!name || !/^\S+@\S+\.\S+$/.test(email) || !['admin', 'manager'].includes(b.role)) throw httpErr(400, 'Enter a name, a valid email and a role.');
     if (db.users.some((x) => x.email === email)) throw httpErr(409, 'Someone already has an account with that email.');
     const password = tempPassword();
     const nu = { id: nextId('users'), name, email, password, role: b.role, mustChange: true, active: true, createdAt: now(), lastLoginAt: null };
     db.users.push(nu);
+    log(null, u.id, 'user_created', `Added ${b.role === 'admin' ? 'Admin' : 'Counsellor'} ${name} (${email})`);
     db.outbox.unshift({ id: nextId('outbox'), to: [email], subject: 'Your Lehar Portal account', title: 'Welcome to Lehar',
       lines: [`Email: ${email}`, `Temporary password: ${password}`, 'You will be asked to set your own password when you sign in.'], createdAt: now() });
     save();
@@ -305,8 +350,13 @@
     requireRole(u, 'admin');
     const t = db.users.find((x) => x.id === Number(p.id));
     if (!t) throw httpErr(404, 'User not found.');
-    if (b.role !== undefined && !['admin', 'manager', 'viewer'].includes(b.role)) throw httpErr(400, 'Unknown role.');
+    if (b.role !== undefined && !['admin', 'manager'].includes(b.role)) throw httpErr(400, 'Unknown role.');
     if (t.id === u.id && ((b.role && b.role !== 'admin') || b.active === false)) throw httpErr(400, 'You cannot remove your own Admin access.');
+    const what = [];
+    if (b.name !== undefined && String(b.name).trim() && String(b.name).trim() !== t.name) what.push(`name to ${String(b.name).trim()}`);
+    if (b.role !== undefined && b.role !== t.role) what.push(`role to ${b.role === 'admin' ? 'Admin' : 'Counsellor'}`);
+    if (b.active !== undefined && !!b.active !== t.active) what.push(b.active ? 'reactivated' : 'deactivated');
+    if (what.length) log(null, u.id, 'user_updated', `${t.name}: ${what.join(', ')}`);
     if (b.name !== undefined) t.name = String(b.name).trim() || t.name;
     if (b.role !== undefined) { t.role = b.role; if (b.role !== 'manager') db.students.forEach((s) => { if (s.managerId === t.id) s.managerId = null; }); }
     if (b.active !== undefined) t.active = !!b.active;
@@ -319,6 +369,7 @@
     if (!t) throw httpErr(404, 'User not found.');
     const password = tempPassword();
     t.password = password; t.mustChange = true;
+    log(null, u.id, 'password_reset', `Reset password for ${t.name}`);
     db.outbox.unshift({ id: nextId('outbox'), to: [t.email], subject: 'Your Lehar password was reset', title: 'Password reset by Admin',
       lines: [`Temporary password: ${password}`], createdAt: now() });
     save();
@@ -330,6 +381,8 @@
     if (id === u.id) throw httpErr(400, 'You cannot delete your own account.');
     if (!db.users.some((x) => x.id === id)) throw httpErr(404, 'User not found.');
     db.students.forEach((s) => { if (s.managerId === id) s.managerId = null; });
+    const gone = db.users.find((x) => x.id === id);
+    log(null, u.id, 'user_deleted', `Deleted ${gone.name} (${gone.email})`);
     db.users = db.users.filter((x) => x.id !== id);
     save();
     return { ok: true };
@@ -451,16 +504,18 @@
     const f = cleanStudent(b);
     if ('fullName' in f && !f.fullName) throw httpErr(400, 'Student name cannot be empty.');
     if ('phone' in f && !f.phone) throw httpErr(400, 'Phone cannot be empty.');
+    const LABEL = { fullName: 'name', leadSource: 'lead source', parentName: 'parent name', parentPhone: 'parent phone' };
+    const short = (v) => { v = Array.isArray(v) ? v.join(', ') : v; return v == null || v === '' ? '—' : String(v).length > 60 ? `${String(v).slice(0, 57)}…` : String(v); };
     const changes = Object.keys(f).filter((k) => JSON.stringify(s[k] ?? null) !== JSON.stringify(f[k]))
-      .map((k) => k.replace(/([A-Z])/g, ' $1').toLowerCase());
+      .map((k) => (k === 'notes' ? 'notes' : `${LABEL[k] || k.replace(/([A-Z])/g, ' $1').toLowerCase()}: ${short(s[k])} → ${short(f[k])}`));
     let reassigned = false;
     if (b.managerId !== undefined && u.role === 'admin') {
       const m = validManager(b.managerId);
       if (m === undefined) throw httpErr(400, 'Choose an active counsellor.');
-      if (m !== s.managerId) { f.managerId = m; reassigned = true; changes.push('counsellor'); }
+      if (m !== s.managerId) { f.managerId = m; reassigned = true; changes.push(`counsellor: ${userName(s.managerId) || 'not assigned'} → ${userName(m) || 'not assigned'}`); }
     }
     Object.assign(s, f);
-    if (changes.length) log(s.id, u.id, 'details_updated', `Updated ${changes.join(', ')}`);
+    if (changes.length) log(s.id, u.id, 'details_updated', `Updated ${changes.join('; ')}`);
     if (reassigned && s.managerId) notify({ student: s, actor: u, subject: 'Student assigned to you', title: 'Student assigned to you',
       lines: [`Current phase: ${(phaseById(s.currentPhaseId) || {}).name || 'none'}`] });
     save();
@@ -668,19 +723,70 @@
       leadSources: Object.entries(sources).map(([source, n]) => ({ source, students: n })).sort((a, b) => b.students - a.students)
     };
   }
-  route('GET', '/reports/summary', (b, q, u) => summary(u));
-  route('GET', '/reports/activity', (b, q, u) => {
+  route('GET', '/reports/summary', (b, q, u) => { requireRole(u, 'admin'); return summary(u); });
+  // Activity: recent changes for everyone (their own students), full logs for Admin
+  route('GET', '/activity/recent', (b, q, u) => {
     const ids = new Set(visibleStudents(u).map((s) => s.id));
     const limit = Math.min(Number(q.limit) || 20, 100);
     return { activity: db.activity.filter((a) => ids.has(a.studentId)).sort((a, b) => b.id - a.id).slice(0, limit)
       .map((a) => ({ ...a, userName: userName(a.userId), studentName: (db.students.find((s) => s.id === a.studentId) || {}).fullName })) };
+  });
+  const inRange = (row, q) => (!q.userId || row.userId === Number(q.userId))
+    && (!/^\d{4}-\d{2}-\d{2}$/.test(q.from || '') || row.createdAt >= `${q.from} 00:00:00`)
+    && (!/^\d{4}-\d{2}-\d{2}$/.test(q.to || '') || row.createdAt <= `${q.to} 23:59:59`);
+  const userRole = (id) => (db.users.find((x) => x.id === id) || {}).role || null;
+  route('GET', '/activity/log', (b, q, u) => {
+    requireRole(u, 'admin');
+    const term = String(q.q || '').toLowerCase();
+    const studentName = (id) => (db.students.find((s) => s.id === id) || {}).fullName || null;
+    const list = db.activity.filter((a) => inRange(a, q) && (!term || String(a.detail || '').toLowerCase().includes(term)
+      || String(studentName(a.studentId) || '').toLowerCase().includes(term))).sort((a, b) => b.id - a.id);
+    const limit = Math.min(Number(q.limit) || 50, 200), offset = Math.max(Number(q.offset) || 0, 0);
+    return { total: list.length, items: list.slice(offset, offset + limit).map((a) => ({ id: a.id, studentId: a.studentId, studentName: studentName(a.studentId),
+      action: a.action, detail: a.detail, userId: a.userId, userName: userName(a.userId), userRole: userRole(a.userId), createdAt: a.createdAt })) };
+  });
+  route('GET', '/activity/logins', (b, q, u) => {
+    requireRole(u, 'admin');
+    const list = (db.logins || []).filter((l) => inRange(l, q) && (!['login', 'logout', 'failed'].includes(q.event) || l.event === q.event)).sort((a, b) => b.id - a.id);
+    const limit = Math.min(Number(q.limit) || 50, 200), offset = Math.max(Number(q.offset) || 0, 0);
+    return { total: list.length, items: list.slice(offset, offset + limit).map((l) => ({ ...l, userName: userName(l.userId), userRole: userRole(l.userId) })) };
+  });
+  route('GET', '/activity/counsellors', (b, q, u) => {
+    requireRole(u, 'admin');
+    const today = L.todayIST();
+    return { counsellors: db.users.filter((x) => x.role === 'manager')
+      .map((x) => {
+        const acts = db.activity.filter((a) => a.userId === x.id);
+        return { id: x.id, name: x.name, email: x.email, active: x.active, lastLoginAt: x.lastLoginAt,
+          students: db.students.filter((s) => s.managerId === x.id).length,
+          loginsToday: (db.logins || []).filter((l) => l.userId === x.id && l.event === 'login' && l.createdAt.startsWith(today)).length,
+          actionsToday: acts.filter((a) => a.createdAt.startsWith(today)).length,
+          lastActionAt: acts.map((a) => a.createdAt).sort().pop() || null };
+      })
+      .sort((a, c) => (c.active - a.active) || String(c.lastLoginAt || '').localeCompare(String(a.lastLoginAt || '')) || a.name.localeCompare(c.name)) };
+  });
+  route('POST', '/students/assign', (b, q, u) => {
+    requireRole(u, 'admin');
+    const ids = [...new Set((Array.isArray(b.studentIds) ? b.studentIds : []).map(Number).filter(Boolean))];
+    if (!ids.length) throw httpErr(400, 'Choose at least one student.');
+    const managerId = validManager(b.managerId);
+    if (managerId === undefined) throw httpErr(400, 'Choose an active counsellor.');
+    const c = db.users.find((x) => x.id === managerId);
+    const changed = db.students.filter((s) => ids.includes(s.id) && s.managerId !== managerId);
+    changed.forEach((s) => { s.managerId = managerId; log(s.id, u.id, 'details_updated', c ? `Assigned to ${c.name}` : 'Counsellor removed (not assigned)'); });
+    if (c && changed.length && c.id !== u.id) {
+      db.outbox.unshift({ id: nextId('outbox'), to: [c.email], subject: `[Lehar] ${changed.length} student${changed.length === 1 ? '' : 's'} assigned to you`,
+        title: 'Students assigned to you', lines: [...changed.map((s) => s.fullName), `By ${u.name}`], createdAt: now() });
+    }
+    save();
+    return { ok: true, updated: changed.length };
   });
   route('GET', '/demo/outbox', (b, q, u) => { requireRole(u, 'admin'); return { emails: db.outbox }; });
 
   /* ---------- Dispatcher ---------- */
   async function request(method, fullPath, body) {
     if (!db) load();
-    else { try { const fresh = JSON.parse(localStorage.getItem(KEY)); if (fresh && fresh.v === 3) db = fresh; } catch (e) { /* keep memory copy */ } }
+    else { try { const fresh = JSON.parse(localStorage.getItem(KEY)); if (fresh && fresh.v === 4) db = fresh; } catch (e) { /* keep memory copy */ } }
     const [path, qs] = fullPath.split('?');
     const q = Object.fromEntries(new URLSearchParams(qs || ''));
     for (const r of routes) {
@@ -777,14 +883,20 @@
           rows: sum.byManager.map((m) => [m.name, m.students, m.pendingDocs, m.awaitingDecision, m.accepted]) },
         { name: 'Results by university', columns: [{ header: 'University', width: 34 }, { header: 'Country', width: 14 }, { header: 'Applications', width: 13 },
           { header: 'Accepted', width: 10 }, { header: 'Rejected', width: 10 }, { header: 'Waitlisted', width: 11 }, { header: 'Waiting for decision', width: 20 }, { header: 'Acceptance rate %', width: 17 }],
-          rows: sum.byUniversity.map((x) => [x.name, x.country, x.total, x.accepted, x.rejected, x.waitlisted, x.applied, x.acceptanceRate ?? '']) }
+          rows: sum.byUniversity.map((x) => [x.name, x.country, x.total, x.accepted, x.rejected, x.waitlisted, x.applied, x.acceptanceRate ?? '']) },
+        { name: 'Sign-ins (90 days)', columns: [{ header: 'When (IST)', width: 20 }, { header: 'Person', width: 22 }, { header: 'Email used', width: 28 },
+          { header: 'Event', width: 16 }, { header: 'IP address', width: 18 }, { header: 'Browser / device', width: 60 }],
+          rows: (db.logins || []).filter((l) => l.createdAt >= daysAgo(90, 0, 0)).sort((a, b) => b.id - a.id)
+            .map((l) => [l.createdAt, userName(l.userId) || '', l.email, { login: 'Signed in', logout: 'Signed out', failed: 'Failed sign-in' }[l.event], l.ip, l.userAgent]) },
+        { name: 'Activity log (90 days)', columns: [{ header: 'When (IST)', width: 20 }, { header: 'Person', width: 22 }, { header: 'Student', width: 24 }, { header: 'What happened', width: 80 }],
+          rows: db.activity.filter((a) => a.createdAt >= daysAgo(90, 0, 0)).sort((a, b) => b.id - a.id)
+            .map((a) => [a.createdAt, userName(a.userId) || '', (db.students.find((s) => s.id === a.studentId) || {}).fullName || '', a.detail]) }
       ]);
     },
     reset() { localStorage.removeItem(KEY); localStorage.removeItem(SESSION_KEY); db = null; load(); },
     accounts: () => [
       { label: 'Admin', email: 'admin@icsoln.com', password: 'Admin123', note: 'Full access' },
-      { label: 'Counsellor', email: 'counsellor@icsoln.com', password: 'Counsellor123', note: 'Edits assigned students' },
-      { label: 'User', email: 'user@icsoln.com', password: 'User123', note: 'View only' }
+      { label: 'Counsellor', email: 'counsellor@icsoln.com', password: 'Counsellor123', note: 'Only students assigned to them' }
     ]
   };
 })();

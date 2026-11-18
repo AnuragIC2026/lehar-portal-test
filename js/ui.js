@@ -15,7 +15,7 @@
     ['applied', 'Applied'], ['accepted', 'Accepted'], ['rejected', 'Rejected'], ['waitlisted', 'Waitlisted']
   ];
   L.DOC_STATUS = [['pending', 'Waiting for review'], ['approved', 'Approved'], ['rejected', 'Rejected']];
-  L.ROLES = [['admin', 'Admin'], ['manager', 'Counsellor'], ['viewer', 'User (view only)']];
+  L.ROLES = [['admin', 'Admin'], ['manager', 'Counsellor']]; // 'manager' is the stored name for Counsellor
   L.LEAD_SOURCES = ['Walk-in', 'Phone call', 'Website', 'Instagram', 'Facebook', 'Referral', 'Event / seminar', 'WhatsApp', 'Other'];
   L.COUNTRIES = ['USA', 'Canada', 'UK', 'Ireland', 'Germany', 'Sweden', 'Netherlands', 'France', 'Switzerland', 'Singapore', 'Australia', 'New Zealand', 'Other'];
   L.DOC_TYPES = ['Passport', '10th marksheet', '12th marksheet', 'Degree certificate', 'Transcripts', 'IELTS / TOEFL / PTE scorecard',
@@ -85,6 +85,7 @@
     edit: '<path d="M4 20h4L19 9l-4-4L4 16v4z"/>',
     trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
     arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     file: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5"/>'
   };
   L.icon = (name, cls = '') => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ''}</svg>`;
@@ -186,7 +187,23 @@
     delete: (u) => u.role === 'admin',
     export: (u) => u.role === 'admin',
     assignManager: (u) => u.role === 'admin',
-    seeAllStudents: (u) => u.role === 'admin' || u.role === 'viewer'
+    seeAllStudents: (u) => u.role === 'admin',
+    seeReports: (u) => u.role === 'admin',
+    seeActivityLog: (u) => u.role === 'admin'
+  };
+
+  /* ---------- Sign-in log helpers ---------- */
+  L.LOGIN_EVENTS = [['login', 'Signed in'], ['logout', 'Signed out'], ['failed', 'Failed sign-in']];
+  L.loginBadge = (ev) => `<span class="badge ${ev === 'login' ? 'st-green' : ev === 'failed' ? 'st-red' : 'st-gray'}">${esc(L.label(L.LOGIN_EVENTS, ev))}</span>`;
+  // "Chrome on Windows", "Safari on iPhone" … from a browser's user-agent text
+  L.device = (ua) => {
+    ua = String(ua || '');
+    if (!ua) return 'Unknown device';
+    const browser = /Edg\//.test(ua) ? 'Edge' : /OPR\//.test(ua) ? 'Opera' : /Firefox\//.test(ua) ? 'Firefox'
+      : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : 'Browser';
+    const os = /iPhone/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : /Android/.test(ua) ? 'Android'
+      : /Windows/.test(ua) ? 'Windows' : /Mac OS X|Macintosh/.test(ua) ? 'Mac' : /Linux/.test(ua) ? 'Linux' : 'unknown system';
+    return `${browser} on ${os}`;
   };
 
   /* ---------- Bars ---------- */

@@ -37,7 +37,6 @@
               ${L.can.delete(u) ? `<button class="btn btn-danger" data-act="delete">${L.icon('trash')}Delete</button>` : ''}
             </div>
           </div>
-          ${!canEdit && u.role === 'viewer' ? '<div class="notice" style="margin:0 20px 16px">You have view-only access.</div>' : ''}
           <div class="tabs" role="tablist" aria-label="Student sections">
             ${TABS.map(([k, label]) => `<button role="tab" id="tab-${k}" aria-controls="panel" aria-selected="${tab === k}" data-tab="${k}">${label}${counts[k] != null ? `<span class="count">${counts[k]}</span>` : ''}</button>`).join('')}
           </div>

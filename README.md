@@ -8,6 +8,7 @@ This repository holds the **demo** only. On GitHub Pages it runs entirely in the
 | --- | --- | --- |
 | Admin | admin@icsoln.com | Admin123 |
 | Counsellor | counsellor@icsoln.com | Counsellor123 |
-| User (view only) | user@icsoln.com | User123 |
+
+The sample data also includes a second counsellor (priya@icsoln.com / Counsellor123) and sample sign-in history for the Activity log.
 
 The live version (Node.js + MySQL) uses the same front end and is deployed separately on the VPS.

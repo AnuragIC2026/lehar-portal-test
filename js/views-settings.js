@@ -21,20 +21,20 @@
     el.innerHTML = `
       <div class="page-head"><div><h1>Users</h1><p class="sub">Who can sign in, and what they can do</p></div>
         <div class="actions"><button class="btn btn-primary" data-add>${L.icon('plus')}Add user</button></div></div>
-      <section class="card" style="margin-bottom:16px"><div class="card-body grid" style="grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
-        <div>${L.roleBadge('admin')}<p class="small muted" style="margin-top:6px">Everything: all students, settings, users, deleting and Excel export.</p></div>
-        <div>${L.roleBadge('manager')}<p class="small muted" style="margin-top:6px">Only students assigned to them: add and edit leads, move phases, set statuses, applications, upload and review documents. No deleting.</p></div>
-        <div>${L.roleBadge('viewer')}<p class="small muted" style="margin-top:6px">Can view every student and the reports. Cannot change anything.</p></div>
+      <section class="card" style="margin-bottom:16px"><div class="card-body grid grid-2" style="gap:16px">
+        <div>${L.roleBadge('admin')}<p class="small muted" style="margin-top:6px">Everything: all students, assigning students to counsellors, reports, the activity log, users, settings, deleting and Excel export.</p></div>
+        <div>${L.roleBadge('manager')}<p class="small muted" style="margin-top:6px">Only the students assigned to them: add and edit leads, move phases, set statuses, applications, upload and review documents. No reports, no deleting.</p></div>
       </div></section>
       <section class="card"><div class="table-wrap"><table><caption class="sr-only">Users</caption>
-        <thead><tr><th>Name</th><th>Role</th><th class="num">Students</th><th class="hide-sm">Last sign-in</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
+        <thead><tr><th>Name</th><th>Role</th><th class="num">Students</th><th class="hide-sm">Last sign-in</th><th class="num hide-sm">Sign-ins (30 days)</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
         <tbody>${users.map((x) => `<tr>
           <td><div class="cell-title">${esc(x.name)}${x.id === me.id ? ' <span class="small soft">(you)</span>' : ''}</div><div class="small soft">${esc(x.email)}</div></td>
           <td>${L.roleBadge(x.role)}</td>
           <td class="num">${x.role === 'manager' ? x.studentCount : '<span class="soft">—</span>'}</td>
-          <td class="hide-sm small">${x.lastLoginAt ? esc(L.fmtDateTime(x.lastLoginAt)) : '<span class="soft">Never</span>'}</td>
+          <td class="hide-sm small">${x.lastLoginAt ? esc(L.lastSeen(x.lastLoginAt)) : '<span class="soft">Never</span>'}</td>
+          <td class="num hide-sm"><a href="#/activity?userId=${x.id}" aria-label="Sign-in history for ${esc(x.name)}">${x.logins30d || 0}</a></td>
           <td>${x.active ? (x.mustChangePassword ? '<span class="badge st-amber">Password not set yet</span>' : '<span class="badge st-green">Active</span>') : '<span class="badge st-gray">Deactivated</span>'}</td>
-          <td class="nowrap" style="text-align:right"><button class="btn btn-sm" data-edit="${x.id}">Edit</button>
+          <td class="nowrap" style="text-align:right"><a class="btn btn-sm" href="#/activity?userId=${x.id}">Activity</a> <button class="btn btn-sm" data-edit="${x.id}">Edit</button>
             <button class="btn btn-sm" data-reset="${x.id}">Reset password</button>
             ${x.id !== me.id ? `<button class="btn btn-sm btn-danger" data-del="${x.id}" aria-label="Delete ${esc(x.name)}">${L.icon('trash')}</button>` : ''}</td></tr>`).join('')}
         </tbody></table></div></section>`;
@@ -66,7 +66,7 @@
             body: `<div class="field"><label for="eu-name">Name</label><input id="eu-name" name="name" type="text" value="${esc(x.name)}"></div>
               <div class="field"><span class="label-text">Email</span><span class="muted">${esc(x.email)}</span></div>
               <div class="field"><label for="eu-role">Role</label><select id="eu-role" name="role"${x.id === me.id ? ' disabled' : ''}>${L.options(L.ROLES, x.role)}</select>
-                ${x.role === 'manager' && x.studentCount ? `<span class="help">If this person stops being a Counsellor, their ${x.studentCount} students become unassigned.</span>` : ''}</div>
+                ${x.role === 'manager' && x.studentCount ? `<span class="help">If this person becomes an Admin, their ${x.studentCount} students become unassigned.</span>` : ''}</div>
               ${x.id !== me.id ? `<div class="checks"><label><input type="checkbox" name="active" value="1"${x.active ? ' checked' : ''}> Account active (can sign in)</label></div>` : ''}`,
             onSubmit: async (fd) => {
               const d = L.formObject(fd);

@@ -40,7 +40,8 @@
     { re: /^\/dashboard$/, view: 'dashboard', nav: 'dashboard' },
     { re: /^\/students$/, view: 'students', nav: 'students' },
     { re: /^\/students\/(\d+)$/, view: 'student', nav: 'students', params: ['id'] },
-    { re: /^\/reports$/, view: 'reports', nav: 'reports' },
+    { re: /^\/reports$/, view: 'reports', nav: 'reports', admin: true },
+    { re: /^\/activity$/, view: 'activity', nav: 'activity', admin: true },
     { re: /^\/settings\/users$/, view: 'users', nav: 'users', admin: true },
     { re: /^\/settings\/phases$/, view: 'phases', nav: 'phases', admin: true },
     { re: /^\/settings\/universities$/, view: 'universities', nav: 'universities', admin: true },
@@ -129,10 +130,11 @@
   }
   function navLinks(user) {
     let html = navLink('#/dashboard', 'dashboard', 'dashboard', 'Dashboard') +
-      navLink('#/students', 'students', 'students', 'Students') +
-      navLink('#/reports', 'reports', 'reports', 'Reports');
+      navLink('#/students', 'students', 'students', user.role === 'admin' ? 'Students' : 'My students');
     if (user.role === 'admin') {
-      html += '<div class="group">Settings</div>' +
+      html += navLink('#/reports', 'reports', 'reports', 'Reports') +
+        navLink('#/activity', 'activity', 'clock', 'Activity log') +
+        '<div class="group">Settings</div>' +
         navLink('#/settings/users', 'users', 'users', 'Users') +
         navLink('#/settings/phases', 'phases', 'phases', 'Journey phases') +
         navLink('#/settings/universities', 'universities', 'university', 'Universities');
