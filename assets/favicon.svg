@@ -1,11 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="182.8 17.0 164.1 164.1">
-  <!-- Lehar icon: the L from the logo, split by the water line. -->
+  <!-- Lehar icon (interim, Samudra colours): the L from the logo with the orange water line. -->
   <defs>
     <path id="l" d="M229.625 150.0V44.10000000000001H253.175V150.0ZM247.775 150.0V129.3H300.125V150.0Z"/>
     <clipPath id="t"><path d="M0 108 C 30 95, 60 95, 90 108 S 150 121, 180 108 S 240 95, 270 108 S 330 121, 360 108 S 420 95, 450 108 S 510 121, 540 108 L 540 0 L 0 0 Z"/></clipPath>
     <clipPath id="b"><path d="M0 108 C 30 95, 60 95, 90 108 S 150 121, 180 108 S 240 95, 270 108 S 330 121, 360 108 S 420 95, 450 108 S 510 121, 540 108 L 540 260 L 0 260 Z"/></clipPath>
+    <mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="560" height="300"><rect width="560" height="300" fill="#000"/><use href="#l" fill="#fff"/></mask>
   </defs>
-  <rect x="182.8" y="17.0" width="164.1" height="164.1" rx="36.1" fill="#0B2A4A"/>
+  <rect x="182.8" y="17.0" width="164.1" height="164.1" rx="36.1" fill="#1C3F94"/>
   <use href="#l" fill="#FFFFFF" clip-path="url(#t)"/>
-  <use href="#l" fill="#8CCBEA" clip-path="url(#b)"/>
+  <use href="#l" fill="#7FB2FF" clip-path="url(#b)"/>
+  <g mask="url(#m)"><path d="M0 108 C 30 95, 60 95, 90 108 S 150 121, 180 108 S 240 95, 270 108 S 330 121, 360 108 S 420 95, 450 108 S 510 121, 540 108" fill="none" stroke="#F58220" stroke-width="9"/></g>
 </svg>

@@ -294,7 +294,7 @@ a.bar-row:hover .fill { background: var(--navy); }
   .topbar { display: flex; align-items: center; gap: 10px; background: var(--navy); color: #fff; padding: 8px 12px; position: sticky; top: 0; z-index: 30; }
   .topbar .icon-btn { color: #fff; }
   .topbar .icon-btn:hover { background: rgba(255,255,255,.1); color: #fff; }
-  .topbar img.logo { width: 96px; height: auto; }
+  .topbar img.logo { width: 76px; height: auto; }
   .page { padding: 16px; }
   .grid-2, .form-grid, .details-list { grid-template-columns: minmax(0, 1fr); }
   .journey .step-edit { grid-template-columns: minmax(0, 1fr); }

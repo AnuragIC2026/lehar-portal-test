@@ -52,7 +52,8 @@
   L.initials = (name) => String(name || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 
   /* ---------- Logo ----------
-     The Lehar "Waterline" logo. To change it later, replace these files and keep their names:
+     Interim Lehar logo in Samudra colours (royal blue + orange, splash, waves below).
+     When the final logo is agreed, replace these files and keep their names:
        assets/logo.svg        (light backgrounds: sign-in page)
        assets/logo-white.svg  (dark sidebar and mobile top bar)
        assets/favicon.svg     (browser tab icon)

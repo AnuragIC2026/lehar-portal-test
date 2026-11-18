@@ -120,7 +120,7 @@
       </aside>
       <div class="main">
         <div class="topbar"><button class="icon-btn" data-action="open-nav" aria-label="Open menu">${L.icon('menu')}</button>
-          <a href="#/dashboard" aria-label="Lehar home">${L.logo({ variant: 'white', width: 96, className: 'logo' })}</a></div>
+          <a href="#/dashboard" aria-label="Lehar home">${L.logo({ variant: 'white', width: 76, className: 'logo' })}</a></div>
         ${L.isDemo ? `<div class="demo-bar"><strong>Demo</strong><span>Sample data stays in this browser. Emails appear in the Demo outbox instead of being sent.</span>
           <button class="btn btn-sm" data-action="reset-demo">Reset demo data</button></div>` : ''}
         <main class="page" id="main"></main>
