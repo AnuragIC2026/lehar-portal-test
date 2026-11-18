@@ -51,26 +51,16 @@
   L.fmtSize = (b) => (b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
   L.initials = (name) => String(name || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 
-  /* ---------- Logo (Waterline wordmark) ---------- */
-  let logoSeq = 0;
-  L.logo = function ({ variant = 'color', width = 200, tagline = false } = {}) {
-    const id = `wl${++logoSeq}`;
-    const top = variant === 'white' ? '#FFFFFF' : '#0B2A4A';
-    const bot = variant === 'white' ? '#8CCBEA' : '#136F9E';
-    const wave = 'M0 108 C 30 95, 60 95, 90 108 S 150 121, 180 108 S 240 95, 270 108 S 330 121, 360 108 S 420 95, 450 108 S 510 121, 540 108';
-    const text = `<text x="260" y="150" text-anchor="middle" font-family="Outfit, Inter, sans-serif" font-weight="700" font-size="150" letter-spacing="-3"`;
-    const h = Math.round(width * (tagline ? 230 : 190) / 520);
-    return `<svg width="${width}" height="${h}" viewBox="0 0 520 ${tagline ? 230 : 190}" role="img" aria-label="Lehar${tagline ? ', an initiative of Samudra Global' : ''}">
-<defs>
-<clipPath id="${id}t"><path d="${wave} L 540 0 L 0 0 Z"/></clipPath>
-<clipPath id="${id}b"><path d="${wave} L 540 260 L 0 260 Z"/></clipPath>
-<mask id="${id}m"><rect width="520" height="230" fill="#000"/>${text} fill="#fff">Lehar</text></mask>
-</defs>
-${text} fill="${top}" clip-path="url(#${id}t)">Lehar</text>
-${text} fill="${bot}" clip-path="url(#${id}b)">Lehar</text>
-<g mask="url(#${id}m)"><path d="${wave}" fill="none" stroke="#3CC6C0" stroke-width="7"/></g>
-${tagline ? `<text x="260" y="214" text-anchor="middle" font-family="Inter, sans-serif" font-weight="500" font-size="24" fill="${variant === 'white' ? '#B9C8D6' : '#4A5D73'}">An initiative of Samudra Global</text>` : ''}
-</svg>`;
+  /* ---------- Logo ----------
+     Placeholder for now. To use the final Lehar logo, replace these files and keep their names:
+       assets/logo.svg        (light backgrounds: sign-in page)
+       assets/logo-white.svg  (dark sidebar and mobile top bar)
+       assets/favicon.svg     (browser tab icon)
+     PNG works too: change the file names below to .png. */
+  L.LOGO_FILES = { color: 'assets/logo.svg', white: 'assets/logo-white.svg' };
+  L.logo = function ({ variant = 'color', width = 200, className = '' } = {}) {
+    const src = L.LOGO_FILES[variant] || L.LOGO_FILES.color;
+    return `<img src="${src}" alt="Lehar" width="${width}" class="${esc(className)}" style="height:auto;display:block">`;
   };
 
   /* ---------- Icons (inline stroke SVG) ---------- */
