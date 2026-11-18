@@ -37,7 +37,7 @@
         <section class="card">
           <div class="card-head"><h2>Students by phase</h2><a href="#/reports" class="small">Full reports</a></div>
           <div class="card-body">${phases.length ? L.bars(phases.map((p) => ({ label: p.name, value: p.students, id: p.id })), { hrefFor: (r) => `#/students?phase=${r.id}` }) : '<p class="empty">No phases set up.</p>'}
-          ${sum.unassigned ? `<p class="small muted" style="margin-top:12px"><a href="#/students?manager=none">${sum.unassigned} student${sum.unassigned === 1 ? '' : 's'} not assigned to a manager</a></p>` : ''}</div>
+          ${sum.unassigned ? `<p class="small muted" style="margin-top:12px"><a href="#/students?manager=none">${sum.unassigned} student${sum.unassigned === 1 ? '' : 's'} not assigned to a counsellor</a></p>` : ''}</div>
         </section>
         <section class="card">
           <div class="card-head"><h2>Documents waiting</h2></div>

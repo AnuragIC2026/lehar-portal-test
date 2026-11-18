@@ -11,9 +11,9 @@
     const managers = L.managers();
     const countryChecks = L.COUNTRIES.map((c) => `<label><input type="checkbox" name="countries[]" value="${esc(c)}"${(s.countries || []).includes(c) ? ' checked' : ''}> ${esc(c)}</label>`).join('');
     const extraCountries = (s.countries || []).filter((c) => !L.COUNTRIES.includes(c));
-    const managerField = L.can.assignManager(u) ? `<div class="field"><label for="lf-mgr">Assigned manager</label>
+    const managerField = L.can.assignManager(u) ? `<div class="field"><label for="lf-mgr">Assigned counsellor</label>
         <select id="lf-mgr" name="managerId">${L.options(managers.map((m) => [m.id, m.name]), s.managerId, { blank: 'Not assigned yet' })}</select></div>`
-      : (u.role === 'manager' && !student ? '<div class="field"><span class="label-text">Assigned manager</span><span class="muted">You</span></div>' : '');
+      : (u.role === 'manager' && !student ? '<div class="field"><span class="label-text">Assigned counsellor</span><span class="muted">You</span></div>' : '');
     L.modal({
       title: student ? `Edit ${student.fullName}` : 'Add lead',
       submitLabel: student ? 'Save changes' : 'Add lead',
@@ -77,7 +77,7 @@
         <form class="filters" data-filters role="search" aria-label="Filter students">
           <div class="field search"><label for="f-q" class="sr-only">Search</label><input id="f-q" name="q" type="search" placeholder="Search name, phone, email or city" value="${esc(q.q)}"></div>
           <div class="field"><label for="f-phase" class="sr-only">Phase</label><select id="f-phase" name="phase">${L.options(phases.map((p) => [p.id, p.name]), q.phase, { blank: 'All phases' })}</select></div>
-          ${showManager ? `<div class="field"><label for="f-mgr" class="sr-only">Manager</label><select id="f-mgr" name="manager">${L.options([...L.managers().map((m) => [m.id, m.name]), ['none', 'Not assigned']], q.manager, { blank: 'All managers' })}</select></div>` : ''}
+          ${showManager ? `<div class="field"><label for="f-mgr" class="sr-only">Counsellor</label><select id="f-mgr" name="manager">${L.options([...L.managers().map((m) => [m.id, m.name]), ['none', 'Not assigned']], q.manager, { blank: 'All counsellors' })}</select></div>` : ''}
           <div class="field"><label for="f-country" class="sr-only">Country</label><select id="f-country" name="country">${L.options(L.COUNTRIES.filter((c) => c !== 'Other'), q.country, { blank: 'All countries' })}</select></div>
           <div class="field"><label for="f-intake" class="sr-only">Intake</label><select id="f-intake" name="intake">${L.options(intakes, q.intake, { blank: 'All intakes' })}</select></div>
         </form>
@@ -110,7 +110,7 @@
     if (!list.length) return `<div class="empty">${total ? 'No students match these filters.' : 'No students yet. Use “Add lead” to add the first one.'}</div>`;
     return `<div class="table-wrap"><table>
       <caption class="sr-only">Students</caption>
-      <thead><tr><th>Student</th><th>Phase</th>${showManager ? '<th class="hide-sm">Manager</th>' : ''}<th class="hide-sm">Countries</th><th class="hide-sm">Intake</th>
+      <thead><tr><th>Student</th><th>Phase</th>${showManager ? '<th class="hide-sm">Counsellor</th>' : ''}<th class="hide-sm">Countries</th><th class="hide-sm">Intake</th>
         <th class="num">Docs to review</th><th class="num">Offers</th><th class="hide-sm">Updated</th></tr></thead>
       <tbody>${list.map((s) => `<tr class="clickable" data-id="${s.id}">
         <td><div class="cell-title"><a href="#/students/${s.id}">${esc(s.fullName)}</a></div><div class="small soft">${esc(s.phone || '')}${s.city ? ` · ${esc(s.city)}` : ''}</div></td>

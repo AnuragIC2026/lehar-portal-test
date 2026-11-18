@@ -66,7 +66,7 @@
             body: `<div class="field"><label for="eu-name">Name</label><input id="eu-name" name="name" type="text" value="${esc(x.name)}"></div>
               <div class="field"><span class="label-text">Email</span><span class="muted">${esc(x.email)}</span></div>
               <div class="field"><label for="eu-role">Role</label><select id="eu-role" name="role"${x.id === me.id ? ' disabled' : ''}>${L.options(L.ROLES, x.role)}</select>
-                ${x.role === 'manager' && x.studentCount ? `<span class="help">If this person stops being a Manager, their ${x.studentCount} students become unassigned.</span>` : ''}</div>
+                ${x.role === 'manager' && x.studentCount ? `<span class="help">If this person stops being a Counsellor, their ${x.studentCount} students become unassigned.</span>` : ''}</div>
               ${x.id !== me.id ? `<div class="checks"><label><input type="checkbox" name="active" value="1"${x.active ? ' checked' : ''}> Account active (can sign in)</label></div>` : ''}`,
             onSubmit: async (fd) => {
               const d = L.formObject(fd);
@@ -170,7 +170,7 @@
           ${u.active ? `<button class="btn btn-sm btn-danger" data-remove="${u.id}">Remove</button>` : `<button class="btn btn-sm" data-show="${u.id}">Show again</button>`}</td></tr>`).join('');
     }
     el.innerHTML = `
-      <div class="page-head"><div><h1>Universities</h1><p class="sub">The master list managers pick from when adding applications</p></div>
+      <div class="page-head"><div><h1>Universities</h1><p class="sub">The master list counsellors pick from when adding applications</p></div>
         <div class="actions"><button class="btn btn-primary" data-add>${L.icon('plus')}Add university</button></div></div>
       <section class="card">
         <div class="filters" style="grid-template-columns:minmax(180px,260px)"><div class="field"><label for="uf-c" class="sr-only">Country</label>
@@ -221,6 +221,6 @@
         <div class="small muted">To: ${esc(m.to.join(', '))}</div>
         <div class="body">${esc(m.title)}\n${esc((m.lines || []).join('\n'))}</div>
         ${m.studentId ? `<a class="small" href="#/students/${m.studentId}">Open student</a>` : ''}</div>`).join('')
-        : '<p class="empty">No emails yet. Try moving a student to another phase while signed in as Admin — the assigned manager gets an email.</p>'}</section>`;
+        : '<p class="empty">No emails yet. Try moving a student to another phase while signed in as Admin — the assigned counsellor gets an email.</p>'}</section>`;
   };
 })();

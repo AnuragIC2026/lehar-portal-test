@@ -3,7 +3,7 @@
    so the demo behaves like the real portal. Emails go to a "Demo outbox" page instead of being sent. */
 (function () {
   const L = (window.L = window.L || {});
-  const KEY = 'lehar-demo-v2';
+  const KEY = 'lehar-demo-v3';
   const SESSION_KEY = 'lehar-demo-session';
   const MAX_STORED_FILE = 1.5 * 1024 * 1024;
   const MAX_UPLOAD = 10 * 1024 * 1024;
@@ -16,7 +16,7 @@
   let db = null;
   function load() {
     try { db = JSON.parse(localStorage.getItem(KEY)); } catch (e) { db = null; }
-    if (!db || db.v !== 2) { db = seed(); save(); }
+    if (!db || db.v !== 3) { db = seed(); save(); }
   }
   function save() {
     try { localStorage.setItem(KEY, JSON.stringify(db)); }
@@ -39,12 +39,12 @@
     return d.toISOString().slice(0, 19).replace('T', ' ');
   }
   function seed() {
-    const s = { v: 2, seq: {}, users: [], phases: [], universities: [], students: [], studentPhases: [], applications: [], documents: [], activity: [], outbox: [], otps: [] };
+    const s = { v: 3, seq: {}, users: [], phases: [], universities: [], students: [], studentPhases: [], applications: [], documents: [], activity: [], outbox: [], otps: [] };
     const id = (t) => (s.seq[t] = (s.seq[t] || 0) + 1);
     const user = (name, email, password, role) => { const u = { id: id('users'), name, email, password, role, mustChange: false, active: true, createdAt: daysAgo(60), lastLoginAt: null }; s.users.push(u); return u; };
     // The three demo logins
     const admin = user('Admin', 'admin@icsoln.com', 'Admin123', 'admin');
-    const manager = user('Manager', 'manager@icsoln.com', 'Manager123', 'manager');
+    const manager = user('Counsellor', 'counsellor@icsoln.com', 'Counsellor123', 'manager');
     user('User', 'user@icsoln.com', 'User123', 'viewer');
 
     ['Lead', 'Counselling', 'Document review', 'University shortlist', 'Applications', 'SOP / LOR', 'Offer', 'Visa apply', 'Visa result', 'Pre-departure', 'Departed']
@@ -64,7 +64,7 @@
     const log = (studentId, userId, action, detail, at) => s.activity.push({ id: id('activity'), studentId, userId, action, detail, createdAt: at });
     const ORDER = s.phases.map((p) => p.id);
 
-    // [name, phone, city, source, countries, course, intake, budget, parent, manager, phase, daysAgoAdded]
+    // [name, phone, city, source, countries, course, intake, budget, parent, counsellor, phase, daysAgoAdded]
     const people = [
       ['Ananya Rao', '98450 11223', 'Bengaluru', 'Walk-in', ['USA'], 'MS Computer Science', 'Fall 2027', '₹40–50 lakh', 'Suresh Rao', manager, 'Lead', 2],
       ['Karthik Iyer', '99001 44556', 'Bengaluru', 'Instagram', ['Canada'], 'PG Diploma, Project Management', 'Sep 2027', '₹20–25 lakh', 'Lakshmi Iyer', manager, 'Counselling', 5],
@@ -420,7 +420,7 @@
     if (!f.fullName || !f.phone) throw httpErr(400, 'Student name and phone are required.');
     let managerId;
     if (u.role === 'manager') managerId = u.id;
-    else { managerId = validManager(b.managerId); if (managerId === undefined) throw httpErr(400, 'Choose an active manager.'); }
+    else { managerId = validManager(b.managerId); if (managerId === undefined) throw httpErr(400, 'Choose an active counsellor.'); }
     const first = [...db.phases].filter((x) => x.active).sort((a, c) => a.sortOrder - c.sortOrder)[0];
     const st = { id: nextId('students'), fullName: null, phone: null, email: null, city: null, leadSource: null, countries: [], course: null, intake: null,
       budget: null, parentName: null, parentPhone: null, notes: null, ...f, managerId, currentPhaseId: first ? first.id : null, createdBy: u.id, createdAt: now(), updatedAt: now() };
@@ -456,8 +456,8 @@
     let reassigned = false;
     if (b.managerId !== undefined && u.role === 'admin') {
       const m = validManager(b.managerId);
-      if (m === undefined) throw httpErr(400, 'Choose an active manager.');
-      if (m !== s.managerId) { f.managerId = m; reassigned = true; changes.push('manager'); }
+      if (m === undefined) throw httpErr(400, 'Choose an active counsellor.');
+      if (m !== s.managerId) { f.managerId = m; reassigned = true; changes.push('counsellor'); }
     }
     Object.assign(s, f);
     if (changes.length) log(s.id, u.id, 'details_updated', `Updated ${changes.join(', ')}`);
@@ -680,7 +680,7 @@
   /* ---------- Dispatcher ---------- */
   async function request(method, fullPath, body) {
     if (!db) load();
-    else { try { const fresh = JSON.parse(localStorage.getItem(KEY)); if (fresh && fresh.v === 2) db = fresh; } catch (e) { /* keep memory copy */ } }
+    else { try { const fresh = JSON.parse(localStorage.getItem(KEY)); if (fresh && fresh.v === 3) db = fresh; } catch (e) { /* keep memory copy */ } }
     const [path, qs] = fullPath.split('?');
     const q = Object.fromEntries(new URLSearchParams(qs || ''));
     for (const r of routes) {
@@ -763,7 +763,7 @@
         { name: 'Students', columns: [{ header: 'ID', width: 6 }, { header: 'Name', width: 24 }, { header: 'Phone', width: 15 }, { header: 'Email', width: 28 },
           { header: 'City', width: 14 }, { header: 'Lead source', width: 14 }, { header: 'Countries', width: 22 }, { header: 'Course', width: 26 },
           { header: 'Intake', width: 12 }, { header: 'Budget', width: 14 }, { header: 'Parent', width: 18 }, { header: 'Parent phone', width: 15 },
-          { header: 'Manager', width: 18 }, { header: 'Current phase', width: 18 }, { header: 'Applications', width: 12 }, { header: 'Accepted', width: 10 }, { header: 'Added on', width: 18 }],
+          { header: 'Counsellor', width: 18 }, { header: 'Current phase', width: 18 }, { header: 'Applications', width: 12 }, { header: 'Accepted', width: 10 }, { header: 'Added on', width: 18 }],
           rows: [...db.students].sort((a, b) => a.fullName.localeCompare(b.fullName)).map((s) => { const it = studentListItem(s); return [s.id, s.fullName, s.phone, s.email, s.city, s.leadSource,
             (s.countries || []).join(', '), s.course, s.intake, s.budget, s.parentName, s.parentPhone, it.managerName, ph(s.currentPhaseId), it.applicationCount, it.acceptedCount, s.createdAt]; }) },
         { name: 'Applications', columns: [{ header: 'Student', width: 24 }, { header: 'University', width: 34 }, { header: 'Country', width: 14 }, { header: 'Course', width: 26 },
@@ -772,7 +772,7 @@
             return [s.fullName, un.name, un.country, a.course, a.intake, STATUS_LABEL[a.status], a.appliedOn, a.decisionOn, a.note]; })
             .sort((a, b) => String(a[0]).localeCompare(String(b[0]))) },
         { name: 'Pipeline', columns: [{ header: 'Phase', width: 24 }, { header: 'Students', width: 12 }], rows: sum.byPhase.filter((p) => p.active || p.students).map((p) => [p.name, p.students]) },
-        { name: 'Managers', columns: [{ header: 'Manager', width: 22 }, { header: 'Students', width: 10 }, { header: 'Documents to review', width: 20 },
+        { name: 'Counsellors', columns: [{ header: 'Counsellor', width: 22 }, { header: 'Students', width: 10 }, { header: 'Documents to review', width: 20 },
           { header: 'Awaiting university decision', width: 28 }, { header: 'Offers accepted', width: 16 }],
           rows: sum.byManager.map((m) => [m.name, m.students, m.pendingDocs, m.awaitingDecision, m.accepted]) },
         { name: 'Results by university', columns: [{ header: 'University', width: 34 }, { header: 'Country', width: 14 }, { header: 'Applications', width: 13 },
@@ -783,7 +783,7 @@
     reset() { localStorage.removeItem(KEY); localStorage.removeItem(SESSION_KEY); db = null; load(); },
     accounts: () => [
       { label: 'Admin', email: 'admin@icsoln.com', password: 'Admin123', note: 'Full access' },
-      { label: 'Manager', email: 'manager@icsoln.com', password: 'Manager123', note: 'Edits assigned students' },
+      { label: 'Counsellor', email: 'counsellor@icsoln.com', password: 'Counsellor123', note: 'Edits assigned students' },
       { label: 'User', email: 'user@icsoln.com', password: 'User123', note: 'View only' }
     ]
   };

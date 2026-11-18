@@ -15,7 +15,7 @@
     ['applied', 'Applied'], ['accepted', 'Accepted'], ['rejected', 'Rejected'], ['waitlisted', 'Waitlisted']
   ];
   L.DOC_STATUS = [['pending', 'Waiting for review'], ['approved', 'Approved'], ['rejected', 'Rejected']];
-  L.ROLES = [['admin', 'Admin'], ['manager', 'Manager'], ['viewer', 'User (view only)']];
+  L.ROLES = [['admin', 'Admin'], ['manager', 'Counsellor'], ['viewer', 'User (view only)']];
   L.LEAD_SOURCES = ['Walk-in', 'Phone call', 'Website', 'Instagram', 'Facebook', 'Referral', 'Event / seminar', 'WhatsApp', 'Other'];
   L.COUNTRIES = ['USA', 'Canada', 'UK', 'Ireland', 'Germany', 'Sweden', 'Netherlands', 'France', 'Switzerland', 'Singapore', 'Australia', 'New Zealand', 'Other'];
   L.DOC_TYPES = ['Passport', '10th marksheet', '12th marksheet', 'Degree certificate', 'Transcripts', 'IELTS / TOEFL / PTE scorecard',

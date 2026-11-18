@@ -1,4 +1,4 @@
-/* Reports: pipeline by phase, per manager, results by country and university, visa outcomes, lead sources, Excel export. */
+/* Reports: pipeline by phase, per counsellor, results by country and university, visa outcomes, lead sources, Excel export. */
 (function () {
   const L = window.L;
   const esc = L.esc;
@@ -33,12 +33,12 @@
         </section>
       </div>
       <section class="card" style="margin-top:16px">
-        <div class="card-head"><h2>By manager</h2>${sum.unassigned ? `<a class="small" href="#/students?manager=none">${sum.unassigned} not assigned</a>` : ''}</div>
-        ${sum.byManager.length ? `<div class="table-wrap"><table><caption class="sr-only">Students by manager</caption>
-          <thead><tr><th>Manager</th><th class="num">Students</th><th class="num">Documents to review</th><th class="num">Awaiting university decision</th><th class="num">Offers accepted</th></tr></thead>
+        <div class="card-head"><h2>By counsellor</h2>${sum.unassigned ? `<a class="small" href="#/students?manager=none">${sum.unassigned} not assigned</a>` : ''}</div>
+        ${sum.byManager.length ? `<div class="table-wrap"><table><caption class="sr-only">Students by counsellor</caption>
+          <thead><tr><th>Counsellor</th><th class="num">Students</th><th class="num">Documents to review</th><th class="num">Awaiting university decision</th><th class="num">Offers accepted</th></tr></thead>
           <tbody>${sum.byManager.map((m) => `<tr><td class="cell-title">${L.can.seeAllStudents(u) ? `<a href="#/students?manager=${m.id}">${esc(m.name)}</a>` : esc(m.name)}</td>
             <td class="num">${m.students}</td><td class="num">${m.pendingDocs ? `<span class="badge st-in_review">${m.pendingDocs}</span>` : '0'}</td>
-            <td class="num">${m.awaitingDecision}</td><td class="num">${m.accepted}</td></tr>`).join('')}</tbody></table></div>` : '<p class="empty">No active managers.</p>'}
+            <td class="num">${m.awaitingDecision}</td><td class="num">${m.accepted}</td></tr>`).join('')}</tbody></table></div>` : '<p class="empty">No active counsellors.</p>'}
       </section>
       <section class="card" style="margin-top:16px">
         <div class="card-head"><h2>Results by country</h2></div>

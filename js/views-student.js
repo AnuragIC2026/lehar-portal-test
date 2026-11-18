@@ -28,7 +28,7 @@
               <div class="avatar" aria-hidden="true">${esc(L.initials(s.fullName))}</div>
               <div><h1>${esc(s.fullName)}</h1>
                 <div class="meta"><span>${esc(s.phone || '')}</span>${s.email ? `<span>${esc(s.email)}</span>` : ''}${s.city ? `<span>${esc(s.city)}</span>` : ''}
-                  <span>Manager: ${s.managerName ? esc(s.managerName) : 'not assigned'}</span><span>Added ${esc(L.fmtDate(s.createdAt))}</span></div>
+                  <span>Counsellor: ${s.managerName ? esc(s.managerName) : 'not assigned'}</span><span>Added ${esc(L.fmtDate(s.createdAt))}</span></div>
                 <div class="row" style="margin-top:10px"><span class="small muted">Current phase</span>${L.phasePill(s.currentPhaseName)}</div>
               </div>
             </div>
@@ -216,7 +216,7 @@
       return `<h2 style="margin-bottom:12px">Contact</h2><dl class="details-list">${row('Phone', s.phone)}${row('Email', s.email)}${row('City', s.city)}${row('Lead source', s.leadSource)}</dl>
         <h2 style="margin:22px 0 12px">Preferences</h2><dl class="details-list">${row('Target countries', (s.countries || []).join(', '))}${row('Course', s.course)}${row('Intake', s.intake)}${row('Budget', s.budget)}</dl>
         <h2 style="margin:22px 0 12px">Parent / guardian</h2><dl class="details-list">${row('Name', s.parentName)}${row('Phone', s.parentPhone)}</dl>
-        <h2 style="margin:22px 0 12px">Other</h2><dl class="details-list">${row('Assigned manager', s.managerName || 'Not assigned')}${row('Added on', L.fmtDateTime(s.createdAt))}
+        <h2 style="margin:22px 0 12px">Other</h2><dl class="details-list">${row('Assigned counsellor', s.managerName || 'Not assigned')}${row('Added on', L.fmtDateTime(s.createdAt))}
           <div style="grid-column:1/-1"><dt>Notes</dt><dd style="white-space:pre-wrap">${s.notes ? esc(s.notes) : '<span class="soft">—</span>'}</dd></div></dl>`;
     }
     function activityPanel() {
