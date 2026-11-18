@@ -1,1 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><!-- Placeholder icon. Replace with the final Lehar icon; keep the name favicon.svg. --><rect width="64" height="64" rx="14" fill="#0B2A4A"/><path d="M22 16 V46 H42" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="182.8 17.0 164.1 164.1">
+  <!-- Lehar icon: the L from the logo, split by the water line. -->
+  <defs>
+    <path id="l" d="M229.625 150.0V44.10000000000001H253.175V150.0ZM247.775 150.0V129.3H300.125V150.0Z"/>
+    <clipPath id="t"><path d="M0 108 C 30 95, 60 95, 90 108 S 150 121, 180 108 S 240 95, 270 108 S 330 121, 360 108 S 420 95, 450 108 S 510 121, 540 108 L 540 0 L 0 0 Z"/></clipPath>
+    <clipPath id="b"><path d="M0 108 C 30 95, 60 95, 90 108 S 150 121, 180 108 S 240 95, 270 108 S 330 121, 360 108 S 420 95, 450 108 S 510 121, 540 108 L 540 260 L 0 260 Z"/></clipPath>
+  </defs>
+  <rect x="182.8" y="17.0" width="164.1" height="164.1" rx="36.1" fill="#0B2A4A"/>
+  <use href="#l" fill="#FFFFFF" clip-path="url(#t)"/>
+  <use href="#l" fill="#8CCBEA" clip-path="url(#b)"/>
+</svg>

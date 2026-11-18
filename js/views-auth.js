@@ -6,7 +6,7 @@
 
   function card(inner) {
     return `<div class="auth-wrap"><div class="card auth-card">
-      <div class="logo">${L.logo({ width: 220 })}<div class="by">An initiative of Samudra Global</div></div>${inner}</div></div>`;
+      <div class="logo">${L.logo({ width: 200 })}<div class="by">An initiative of Samudra Global</div></div>${inner}</div></div>`;
   }
   function showError(el, msg, kind = 'err') {
     const box = el.querySelector('[data-msg]');

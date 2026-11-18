@@ -52,7 +52,7 @@ p { margin: 0; }
 }
 .sidebar .brand { padding: 4px 8px 20px; }
 .sidebar .brand img { display: block; width: 150px; height: auto; }
-.sidebar .brand .by { font-size: 11px; color: #B9C8D6; margin-top: 2px; padding-left: 2px; }
+.sidebar .brand .by { font-size: 11px; color: #B9C8D6; margin-top: 8px; padding-left: 2px; }
 .nav { display: flex; flex-direction: column; gap: 2px; }
 .nav .group { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #8FA6BD; padding: 16px 10px 6px; }
 .nav a {
@@ -238,7 +238,7 @@ a.bar-row:hover .fill { background: var(--navy); }
 .auth-card { width: 100%; max-width: 420px; padding: 32px; }
 .auth-card .logo { display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; }
 .auth-card .logo img { width: 220px; height: auto; }
-.auth-card .logo .by { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.auth-card .logo .by { color: var(--muted); font-size: 13px; margin-top: 10px; }
 .auth-card form { display: flex; flex-direction: column; gap: 14px; }
 .auth-card .btn-primary { width: 100%; min-height: 44px; }
 .auth-card .alt { text-align: center; margin-top: 4px; }
