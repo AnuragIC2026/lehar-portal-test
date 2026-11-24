@@ -36,7 +36,8 @@
 
   L.views.activity = async (el, ctx) => {
     const refs = L.state.refs;
-    const people = [...refs.users].sort((a, b) => (a.role === b.role ? a.name.localeCompare(b.name) : a.role === 'manager' ? -1 : 1));
+    // Managers see only the Counsellors' logs; Admins see everyone's.
+    const people = refs.users.filter((p) => ctx.user.role === 'admin' || p.role === 'manager').sort((a, b) => (a.role === b.role ? a.name.localeCompare(b.name) : a.role === 'manager' ? -1 : 1));
     const state = {
       tab: ctx.query.tab === 'actions' ? 'actions' : 'signins',
       userId: ctx.query.userId || '', from: ctx.query.from || '', to: ctx.query.to || '', event: ctx.query.event || '', q: ctx.query.q || ''
@@ -44,7 +45,7 @@
     const { counsellors } = await L.api.get('/activity/counsellors');
 
     el.innerHTML = `
-      <div class="page-head"><div><h1>Activity log</h1><p class="sub">When each counsellor signs in, and every change anyone makes (IST)</p></div></div>
+      <div class="page-head"><div><h1>Activity log</h1><p class="sub">${ctx.user.role === 'admin' ? 'When each counsellor signs in, and every change anyone makes (IST)' : 'When each counsellor signs in, and every change they make (IST)'}</p></div></div>
       <section class="card" style="margin-bottom:16px">
         <div class="card-head"><h2>Counsellors</h2><span class="small muted">Click a counsellor to see only their activity</span></div>
         <div class="card-body">${L.counsellorCards(counsellors)}</div>

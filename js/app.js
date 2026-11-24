@@ -44,7 +44,7 @@
     { re: /^\/activity$/, view: 'activity', nav: 'activity', staff: true },
     { re: /^\/messages$/, view: 'messages', nav: 'messages' },
     { re: /^\/messages\/(\d+)$/, view: 'messages', nav: 'messages', params: ['cid'], staff: true },
-    { re: /^\/settings\/users$/, view: 'users', nav: 'users', admin: true },
+    { re: /^\/settings\/users$/, view: 'users', nav: 'users', staff: true },
     { re: /^\/settings\/phases$/, view: 'phases', nav: 'phases', staff: true },
     { re: /^\/settings\/universities$/, view: 'universities', nav: 'universities', staff: true },
     { re: /^\/outbox$/, view: 'outbox', nav: 'outbox', staff: true, demoOnly: true }
@@ -170,7 +170,7 @@
       html += navLink('#/reports', 'reports', 'reports', 'Reports') +
         navLink('#/activity', 'activity', 'clock', 'Activity log') +
         '<div class="group">Settings</div>' +
-        (user.role === 'admin' ? navLink('#/settings/users', 'users', 'users', 'Users') : '') +
+        navLink('#/settings/users', 'users', 'users', user.role === 'admin' ? 'Users' : 'Counsellors') +
         navLink('#/settings/phases', 'phases', 'phases', 'Journey phases') +
         navLink('#/settings/universities', 'universities', 'university', 'Universities');
       if (L.isDemo) html += navLink('#/outbox', 'outbox', 'mail', 'Demo outbox');

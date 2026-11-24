@@ -342,9 +342,9 @@
   const tempPassword = () => `Lehar-${Math.random().toString(36).slice(2, 6).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
   route('GET', '/users/lite', () => ({ users: db.users.map((u) => ({ id: u.id, name: u.name, role: u.role, active: u.active })).sort((a, b) => a.name.localeCompare(b.name)) }));
   route('GET', '/users', (b, q, u) => {
-    requireRole(u, 'admin');
+    requireRole(u, 'admin', 'supervisor'); // Managers get a read-only list of the Counsellors
     const cutoff = daysAgo(30, 0, 0);
-    return { users: db.users.map((x) => ({ ...publicUser(x), studentCount: db.students.filter((s) => s.managerId === x.id).length, lastLoginAt: x.lastLoginAt,
+    return { users: db.users.filter((x) => u.role === 'admin' || x.role === 'manager').map((x) => ({ ...publicUser(x), studentCount: db.students.filter((s) => s.managerId === x.id).length, lastLoginAt: x.lastLoginAt,
       logins30d: db.logins.filter((l) => l.userId === x.id && l.event === 'login' && l.createdAt >= cutoff).length, createdAt: x.createdAt })) };
   });
   route('POST', '/users', (b, q, u) => {
@@ -747,6 +747,8 @@
     return { activity: db.activity.filter((a) => ids.has(a.studentId)).sort((a, b) => b.id - a.id).slice(0, limit)
       .map((a) => ({ ...a, userName: userName(a.userId), studentName: (db.students.find((s) => s.id === a.studentId) || {}).fullName })) };
   });
+  // Admins see everyone's sign-ins and changes; Managers see only the Counsellors'.
+  const seesLogOf = (u, userId) => u.role === 'admin' || userRole(userId) === 'manager';
   const inRange = (row, q) => (!q.userId || row.userId === Number(q.userId))
     && (!/^\d{4}-\d{2}-\d{2}$/.test(q.from || '') || row.createdAt >= `${q.from} 00:00:00`)
     && (!/^\d{4}-\d{2}-\d{2}$/.test(q.to || '') || row.createdAt <= `${q.to} 23:59:59`);
@@ -755,7 +757,7 @@
     requireRole(u, 'admin', 'supervisor');
     const term = String(q.q || '').toLowerCase();
     const studentName = (id) => (db.students.find((s) => s.id === id) || {}).fullName || null;
-    const list = db.activity.filter((a) => inRange(a, q) && (!term || String(a.detail || '').toLowerCase().includes(term)
+    const list = db.activity.filter((a) => seesLogOf(u, a.userId) && inRange(a, q) && (!term || String(a.detail || '').toLowerCase().includes(term)
       || String(studentName(a.studentId) || '').toLowerCase().includes(term))).sort((a, b) => b.id - a.id);
     const limit = Math.min(Number(q.limit) || 50, 200), offset = Math.max(Number(q.offset) || 0, 0);
     return { total: list.length, items: list.slice(offset, offset + limit).map((a) => ({ id: a.id, studentId: a.studentId, studentName: studentName(a.studentId),
@@ -763,7 +765,7 @@
   });
   route('GET', '/activity/logins', (b, q, u) => {
     requireRole(u, 'admin', 'supervisor');
-    const list = (db.logins || []).filter((l) => inRange(l, q) && (!['login', 'logout', 'failed'].includes(q.event) || l.event === q.event)).sort((a, b) => b.id - a.id);
+    const list = (db.logins || []).filter((l) => seesLogOf(u, l.userId) && inRange(l, q) && (!['login', 'logout', 'failed'].includes(q.event) || l.event === q.event)).sort((a, b) => b.id - a.id);
     const limit = Math.min(Number(q.limit) || 50, 200), offset = Math.max(Number(q.offset) || 0, 0);
     return { total: list.length, items: list.slice(offset, offset + limit).map((l) => ({ ...l, userName: userName(l.userId), userRole: userRole(l.userId) })) };
   });
@@ -960,10 +962,10 @@
           rows: sum.byUniversity.map((x) => [x.name, x.country, x.total, x.accepted, x.rejected, x.waitlisted, x.applied, x.acceptanceRate ?? '']) },
         { name: 'Sign-ins (90 days)', columns: [{ header: 'When (IST)', width: 20 }, { header: 'Person', width: 22 }, { header: 'Email used', width: 28 },
           { header: 'Event', width: 16 }, { header: 'IP address', width: 18 }, { header: 'Browser / device', width: 60 }],
-          rows: (db.logins || []).filter((l) => l.createdAt >= daysAgo(90, 0, 0)).sort((a, b) => b.id - a.id)
+          rows: (db.logins || []).filter((l) => seesLogOf(u, l.userId) && l.createdAt >= daysAgo(90, 0, 0)).sort((a, b) => b.id - a.id)
             .map((l) => [l.createdAt, userName(l.userId) || '', l.email, { login: 'Signed in', logout: 'Signed out', failed: 'Failed sign-in' }[l.event], l.ip, l.userAgent]) },
         { name: 'Activity log (90 days)', columns: [{ header: 'When (IST)', width: 20 }, { header: 'Person', width: 22 }, { header: 'Student', width: 24 }, { header: 'What happened', width: 80 }],
-          rows: db.activity.filter((a) => a.createdAt >= daysAgo(90, 0, 0)).sort((a, b) => b.id - a.id)
+          rows: db.activity.filter((a) => seesLogOf(u, a.userId) && a.createdAt >= daysAgo(90, 0, 0)).sort((a, b) => b.id - a.id)
             .map((a) => [a.createdAt, userName(a.userId) || '', (db.students.find((s) => s.id === a.studentId) || {}).fullName || '', a.detail]) }
       ]);
     },

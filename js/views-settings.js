@@ -18,12 +18,13 @@
   L.views.users = async (el, ctx) => {
     const me = ctx.user;
     const { users } = await L.api.get('/users');
+    const isAdmin = me.role === 'admin'; // Managers get a read-only list of the Counsellors
     el.innerHTML = `
-      <div class="page-head"><div><h1>Users</h1><p class="sub">Who can sign in, and what they can do</p></div>
-        <div class="actions"><button class="btn btn-primary" data-add>${L.icon('plus')}Add user</button></div></div>
+      <div class="page-head"><div><h1>${isAdmin ? 'Users' : 'Counsellors'}</h1><p class="sub">${isAdmin ? 'Who can sign in, and what they can do' : 'Read only. Only the Admin can add, change or remove people.'}</p></div>
+        ${isAdmin ? `<div class="actions"><button class="btn btn-primary" data-add>${L.icon('plus')}Add user</button></div>` : ''}</div>
       <section class="card" style="margin-bottom:16px"><div class="card-body grid grid-3" style="gap:16px">
         <div>${L.roleBadge('admin')}<p class="small muted" style="margin-top:6px">Everything: all students, assigning students to counsellors, reports, the activity log, users, settings, deleting and Excel export.</p></div>
-        <div>${L.roleBadge('supervisor')}<p class="small muted" style="margin-top:6px">Everything an Admin does except adding, changing or removing users, and deleting. Sees all students, assigns them, sees reports and the activity log, edits phases and universities, and joins every counsellor chat.</p></div>
+        <div>${L.roleBadge('supervisor')}<p class="small muted" style="margin-top:6px">Everything an Admin does except adding, changing or removing users, and deleting. Sees all students and assigns them, sees reports, the Counsellors and their sign-ins and changes, edits phases and universities, and joins every counsellor chat.</p></div>
         <div>${L.roleBadge('manager')}<p class="small muted" style="margin-top:6px">Only the students assigned to them: add and edit leads, move phases, set statuses, applications, upload and review documents. No reports, no deleting.</p></div>
       </div></section>
       <section class="card"><div class="table-wrap"><table><caption class="sr-only">Users</caption>
@@ -35,11 +36,12 @@
           <td class="hide-sm small">${x.lastLoginAt ? esc(L.lastSeen(x.lastLoginAt)) : '<span class="soft">Never</span>'}</td>
           <td class="num hide-sm"><a href="#/activity?userId=${x.id}" aria-label="Sign-in history for ${esc(x.name)}">${x.logins30d || 0}</a></td>
           <td>${x.active ? (x.mustChangePassword ? '<span class="badge st-amber">Password not set yet</span>' : '<span class="badge st-green">Active</span>') : '<span class="badge st-gray">Deactivated</span>'}</td>
-          <td class="nowrap" style="text-align:right"><a class="btn btn-sm" href="#/activity?userId=${x.id}">Activity</a> <button class="btn btn-sm" data-edit="${x.id}">Edit</button>
+          <td class="nowrap" style="text-align:right"><a class="btn btn-sm" href="#/activity?userId=${x.id}">Activity</a>${isAdmin ? ` <button class="btn btn-sm" data-edit="${x.id}">Edit</button>
             <button class="btn btn-sm" data-reset="${x.id}">Reset password</button>
-            ${x.id !== me.id ? `<button class="btn btn-sm btn-danger" data-del="${x.id}" aria-label="Delete ${esc(x.name)}">${L.icon('trash')}</button>` : ''}</td></tr>`).join('')}
+            ${x.id !== me.id ? `<button class="btn btn-sm btn-danger" data-del="${x.id}" aria-label="Delete ${esc(x.name)}">${L.icon('trash')}</button>` : ''}` : ''}</td></tr>`).join('')}
         </tbody></table></div></section>`;
 
+    if (!isAdmin) return; // nothing to change for a Manager
     el.querySelector('[data-add]').addEventListener('click', () => L.modal({
       title: 'Add user', submitLabel: 'Add user',
       body: `<div class="field"><label for="nu-name">Name <span class="req">*</span></label><input id="nu-name" name="name" type="text" required></div>
