@@ -43,14 +43,14 @@
 
   L.views.dashboard = async (el, ctx) => {
     const u = ctx.user;
-    const unreadNotice = `<a class="notice unread-notice" href="#/messages" data-unread-notice hidden>${L.icon('chat')}<strong data-unread-count></strong><span>${u.role === 'admin' ? 'from counsellors' : 'from the Admin team'} · Open Messages</span></a>`;
+    const unreadNotice = `<a class="notice unread-notice" href="#/messages" data-unread-notice hidden>${L.icon('chat')}<strong data-unread-count></strong><span>${L.isStaff(u) ? 'from counsellors' : 'from the Admin team'} · Open Messages</span></a>`;
     const head = (sub) => unreadNotice + `<div class="page-head">
         <div><h1>Good ${greeting()}, ${esc(u.name.split(' ')[0])}</h1><p class="sub">${esc(sub)}</p></div>
         <div class="actions">${L.can.addLead(u) ? `<button class="btn btn-primary" data-add-lead>${L.icon('plus')}Add lead</button>` : ''}
-          <a class="btn" href="#/students">${u.role === 'admin' ? 'View students' : 'My students'}</a></div>
+          <a class="btn" href="#/students">${L.isStaff(u) ? 'View students' : 'My students'}</a></div>
       </div>`;
 
-    if (u.role === 'admin') {
+    if (L.isStaff(u)) {
       const [sum, act, list, team] = await Promise.all([
         L.api.get('/reports/summary'), L.api.get('/activity/recent?limit=10'), L.api.get('/students'), L.api.get('/activity/counsellors')
       ]);

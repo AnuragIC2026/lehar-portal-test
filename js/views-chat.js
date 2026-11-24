@@ -25,12 +25,12 @@
 
   L.views.messages = async (el, ctx) => {
     const me = ctx.user;
-    const isAdmin = me.role === 'admin';
+    const isAdmin = L.isStaff(me); // Admin or Manager: sees every counsellor's chat
     let cid = isAdmin ? Number(ctx.params.cid || 0) : me.id;
     let threads = [];
 
     el.innerHTML = `
-      <div class="page-head"><div><h1>Messages</h1><p class="sub">${isAdmin ? 'One private chat with each counsellor. Every Admin can read and reply.' : 'Your chat with the Admin team'}</p></div></div>
+      <div class="page-head"><div><h1>Messages</h1><p class="sub">${isAdmin ? 'One private chat with each counsellor. Admins and Managers can read and reply.' : 'Your chat with the Admin team'}</p></div></div>
       <section class="card chat-shell${isAdmin ? ' with-list' : ''}${isAdmin && cid ? ' has-open' : ''}">
         ${isAdmin ? '<aside class="chat-list" aria-label="Conversations" data-list><div class="empty">Loading…</div></aside>' : ''}
         <div class="chat-main" data-main><div class="empty">Loading…</div></div>
@@ -67,13 +67,13 @@
     let hasOlder = false;
 
     function bubble(m, prev) {
-      const mine = isAdmin ? m.senderRole === 'admin' || (m.senderId !== m.counsellorId && m.senderRole !== 'manager') : m.senderId === me.id;
+      const mine = isAdmin ? m.senderId !== m.counsellorId : m.senderId === me.id;
       const showDay = !prev || String(prev.createdAt).slice(0, 10) !== String(m.createdAt).slice(0, 10);
       const sameSender = prev && !showDay && prev.senderId === m.senderId;
       const name = m.senderId === me.id ? 'You' : m.senderName;
       return `${showDay ? `<div class="chat-day"><span>${esc(dayLabel(m.createdAt))}</span></div>` : ''}
         <div class="msg ${mine ? 'mine' : 'theirs'}${sameSender ? ' cont' : ''}" data-id="${m.id}">
-          ${sameSender ? '' : `<div class="msg-name">${esc(name)}${!isAdmin && m.senderRole === 'admin' ? ' <span class="soft">· Admin</span>' : ''}</div>`}
+          ${sameSender ? '' : `<div class="msg-name">${esc(name)}${!isAdmin && m.senderRole && m.senderRole !== 'manager' ? ` <span class="soft">· ${esc(L.label(L.ROLES, m.senderRole))}</span>` : ''}</div>`}
           <div class="msg-bubble">${formatBody(m.body)}</div>
           <div class="msg-time">${esc(timeOf(m.createdAt))}</div>
         </div>`;
@@ -110,7 +110,7 @@
       const res = await L.api.get(`/chat/threads/${cid}/messages`);
       counsellor = res.counsellor; messages = res.messages; otherReadId = res.otherReadId; hasOlder = res.hasOlder;
       const title = isAdmin ? counsellor.name : 'Admin team';
-      const sub = isAdmin ? `Counsellor · ${counsellor.email}` : 'Every Admin can read and reply';
+      const sub = isAdmin ? `Counsellor · ${counsellor.email}` : 'Admins and Managers can read and reply';
       mainEl.innerHTML = `
         <div class="chat-head">
           ${isAdmin ? '<a href="#/messages" class="icon-btn chat-back" aria-label="Back to all conversations">' + L.icon('arrow').replace('<svg ', '<svg style="transform:rotate(180deg)" ') + '</a>' : ''}

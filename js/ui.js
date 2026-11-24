@@ -15,7 +15,8 @@
     ['applied', 'Applied'], ['accepted', 'Accepted'], ['rejected', 'Rejected'], ['waitlisted', 'Waitlisted']
   ];
   L.DOC_STATUS = [['pending', 'Waiting for review'], ['approved', 'Approved'], ['rejected', 'Rejected']];
-  L.ROLES = [['admin', 'Admin'], ['manager', 'Counsellor']]; // 'manager' is the stored name for Counsellor
+  L.ROLES = [['admin', 'Admin'], ['supervisor', 'Manager'], ['manager', 'Counsellor']]; // stored names: 'supervisor' is Manager, 'manager' is Counsellor
+  L.isStaff = (u) => !!u && (u.role === 'admin' || u.role === 'supervisor'); // Admin or Manager: sees every student
   L.LEAD_SOURCES = ['Walk-in', 'Phone call', 'Website', 'Instagram', 'Facebook', 'Referral', 'Event / seminar', 'WhatsApp', 'Other'];
   L.COUNTRIES = ['USA', 'Canada', 'UK', 'Ireland', 'Germany', 'Sweden', 'Netherlands', 'France', 'Switzerland', 'Singapore', 'Australia', 'New Zealand', 'Other'];
   L.DOC_TYPES = ['Passport', '10th marksheet', '12th marksheet', 'Degree certificate', 'Transcripts', 'IELTS / TOEFL / PTE scorecard',
@@ -182,15 +183,16 @@
 
   /* ---------- Permissions (mirror of the server rules, for showing or hiding buttons) ---------- */
   L.can = {
-    manageSettings: (u) => u.role === 'admin',
-    addLead: (u) => u.role === 'admin' || u.role === 'manager',
-    editStudent: (u, s) => u.role === 'admin' || (u.role === 'manager' && s && s.managerId === u.id),
+    manageSettings: (u) => L.isStaff(u),
+    manageUsers: (u) => u.role === 'admin',
+    addLead: (u) => L.isStaff(u) || u.role === 'manager',
+    editStudent: (u, s) => L.isStaff(u) || (u.role === 'manager' && s && s.managerId === u.id),
     delete: (u) => u.role === 'admin',
-    export: (u) => u.role === 'admin',
-    assignManager: (u) => u.role === 'admin',
-    seeAllStudents: (u) => u.role === 'admin',
-    seeReports: (u) => u.role === 'admin',
-    seeActivityLog: (u) => u.role === 'admin'
+    export: (u) => L.isStaff(u),
+    assignManager: (u) => L.isStaff(u),
+    seeAllStudents: (u) => L.isStaff(u),
+    seeReports: (u) => L.isStaff(u),
+    seeActivityLog: (u) => L.isStaff(u)
   };
 
   /* ---------- Sign-in log helpers ---------- */

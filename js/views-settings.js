@@ -21,8 +21,9 @@
     el.innerHTML = `
       <div class="page-head"><div><h1>Users</h1><p class="sub">Who can sign in, and what they can do</p></div>
         <div class="actions"><button class="btn btn-primary" data-add>${L.icon('plus')}Add user</button></div></div>
-      <section class="card" style="margin-bottom:16px"><div class="card-body grid grid-2" style="gap:16px">
+      <section class="card" style="margin-bottom:16px"><div class="card-body grid grid-3" style="gap:16px">
         <div>${L.roleBadge('admin')}<p class="small muted" style="margin-top:6px">Everything: all students, assigning students to counsellors, reports, the activity log, users, settings, deleting and Excel export.</p></div>
+        <div>${L.roleBadge('supervisor')}<p class="small muted" style="margin-top:6px">Everything an Admin does except adding, changing or removing users, and deleting. Sees all students, assigns them, sees reports and the activity log, edits phases and universities, and joins every counsellor chat.</p></div>
         <div>${L.roleBadge('manager')}<p class="small muted" style="margin-top:6px">Only the students assigned to them: add and edit leads, move phases, set statuses, applications, upload and review documents. No reports, no deleting.</p></div>
       </div></section>
       <section class="card"><div class="table-wrap"><table><caption class="sr-only">Users</caption>
@@ -66,7 +67,7 @@
             body: `<div class="field"><label for="eu-name">Name</label><input id="eu-name" name="name" type="text" value="${esc(x.name)}"></div>
               <div class="field"><span class="label-text">Email</span><span class="muted">${esc(x.email)}</span></div>
               <div class="field"><label for="eu-role">Role</label><select id="eu-role" name="role"${x.id === me.id ? ' disabled' : ''}>${L.options(L.ROLES, x.role)}</select>
-                ${x.role === 'manager' && x.studentCount ? `<span class="help">If this person becomes an Admin, their ${x.studentCount} students become unassigned.</span>` : ''}</div>
+                ${x.role === 'manager' && x.studentCount ? `<span class="help">If this person stops being a Counsellor, their ${x.studentCount} students become unassigned.</span>` : ''}</div>
               ${x.id !== me.id ? `<div class="checks"><label><input type="checkbox" name="active" value="1"${x.active ? ' checked' : ''}> Account active (can sign in)</label></div>` : ''}`,
             onSubmit: async (fd) => {
               const d = L.formObject(fd);

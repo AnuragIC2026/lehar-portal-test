@@ -91,6 +91,7 @@ p { margin: 0; }
 .grid { display: grid; gap: 16px; }
 .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .grid-3-1 { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
 .stack { display: flex; flex-direction: column; gap: 16px; }
 .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -171,6 +172,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .phase-pill { background: #E6F4F8; color: var(--navy); }
 .phase-pill::before { background: var(--aqua); }
 .role-admin { background: #E8E6FB; color: #3F2E9C; }
+.role-supervisor { background: #FDEBD9; color: #8A4300; }
 .role-manager { background: var(--st-blue-bg); color: var(--st-blue); }
 .role-viewer { background: var(--st-gray-bg); color: var(--st-gray); }
 
@@ -305,7 +307,7 @@ a.bar-row:hover .fill { background: var(--navy); }
   .topbar .icon-btn:hover { background: rgba(255,255,255,.1); color: #fff; }
   .topbar img.logo { width: 76px; height: auto; }
   .page { padding: 16px; }
-  .grid-2, .form-grid, .details-list { grid-template-columns: minmax(0, 1fr); }
+  .grid-2, .grid-3, .form-grid, .details-list { grid-template-columns: minmax(0, 1fr); }
   .journey .step-edit { grid-template-columns: minmax(0, 1fr); }
   .timeline li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
   .bar-row { grid-template-columns: 110px minmax(0, 1fr) 32px; }

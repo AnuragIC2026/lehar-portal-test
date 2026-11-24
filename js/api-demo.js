@@ -3,7 +3,7 @@
    so the demo behaves like the real portal. Emails go to a "Demo outbox" page instead of being sent. */
 (function () {
   const L = (window.L = window.L || {});
-  const KEY = 'lehar-demo-v5';
+  const KEY = 'lehar-demo-v6';
   const SESSION_KEY = 'lehar-demo-session';
   const MAX_STORED_FILE = 1.5 * 1024 * 1024;
   const MAX_UPLOAD = 10 * 1024 * 1024;
@@ -39,7 +39,7 @@
     return d.toISOString().slice(0, 19).replace('T', ' ');
   }
   function seed() {
-    const s = { v: 5, seq: {}, users: [], phases: [], universities: [], students: [], studentPhases: [], applications: [], documents: [], activity: [], logins: [], chat: [], chatReads: {}, outbox: [], otps: [] };
+    const s = { v: 6, seq: {}, users: [], phases: [], universities: [], students: [], studentPhases: [], applications: [], documents: [], activity: [], logins: [], chat: [], chatReads: {}, outbox: [], otps: [] };
     const id = (t) => (s.seq[t] = (s.seq[t] || 0) + 1);
     const user = (name, email, password, role) => { const u = { id: id('users'), name, email, password, role, mustChange: false, active: true, createdAt: daysAgo(60), lastLoginAt: null }; s.users.push(u); return u; };
     // The three demo logins
@@ -47,6 +47,8 @@
     const manager = user('Counsellor', 'counsellor@icsoln.com', 'Counsellor123', 'manager');
     // A second sample counsellor, to show several counsellors working side by side
     const priya = user('Priya Nair', 'priya@icsoln.com', 'Counsellor123', 'manager');
+    // Manager: sees and runs everything like an Admin, but cannot manage users or delete
+    const supervisor = user('Manager', 'manager@icsoln.com', 'Manager123', 'supervisor');
 
     ['Lead', 'Counselling', 'Document review', 'University shortlist', 'Applications', 'SOP / LOR', 'Offer', 'Visa apply', 'Visa result', 'Pre-departure', 'Departed']
       .forEach((name, i) => s.phases.push({ id: id('phases'), name, sortOrder: i + 1, isVisaResult: name === 'Visa result', active: true }));
@@ -202,14 +204,17 @@
   }
 
   /* ---------- Rules shared with the server ---------- */
-  const viewAll = (u) => u.role === 'admin';
+  const isStaff = (u) => u.role === 'admin' || u.role === 'supervisor'; // Admin or Manager
+  const viewAll = (u) => isStaff(u);
   const visibleStudents = (u) => db.students.filter((s) => viewAll(u) || s.managerId === u.id);
   function studentFor(u, id, { edit = false } = {}) {
     const s = db.students.find((x) => x.id === Number(id));
     if (!s || (!viewAll(u) && s.managerId !== u.id)) throw httpErr(404, 'Student not found.');
-    if (edit && !(u.role === 'admin' || (u.role === 'manager' && s.managerId === u.id))) throw httpErr(403, 'You can view this student but not change them.');
+    if (edit && !(isStaff(u) || (u.role === 'manager' && s.managerId === u.id))) throw httpErr(403, 'You can view this student but not change them.');
     return s;
   }
+  const ROLE_NAME = { admin: 'Admin', supervisor: 'Manager', manager: 'Counsellor' };
+  const ROLE_KEYS = Object.keys(ROLE_NAME);
   const requireRole = (u, ...roles) => { if (!roles.includes(u.role)) throw httpErr(403, 'You do not have permission to do this.'); };
   const userName = (id) => (db.users.find((u) => u.id === id) || {}).name || null;
   const phaseById = (id) => db.phases.find((p) => p.id === id);
@@ -228,7 +233,7 @@
     const to = [];
     const mgr = db.users.find((u) => u.id === student.managerId && u.active);
     if (mgr && mgr.id !== actor.id) to.push(mgr.email);
-    if (important) db.users.filter((u) => u.role === 'admin' && u.active && u.id !== actor.id).forEach((u) => to.push(u.email));
+    if (important) db.users.filter((u) => isStaff(u) && u.active && u.id !== actor.id).forEach((u) => to.push(u.email));
     const recipients = [...new Set(to)];
     if (!recipients.length) return;
     db.outbox.unshift({ id: nextId('outbox'), to: recipients, subject: `[Lehar] ${subject} — ${student.fullName}`, title,
@@ -346,12 +351,12 @@
     requireRole(u, 'admin');
     const name = String(b.name || '').trim();
     const email = String(b.email || '').trim().toLowerCase();
-    if (!name || !/^\S+@\S+\.\S+$/.test(email) || !['admin', 'manager'].includes(b.role)) throw httpErr(400, 'Enter a name, a valid email and a role.');
+    if (!name || !/^\S+@\S+\.\S+$/.test(email) || !ROLE_KEYS.includes(b.role)) throw httpErr(400, 'Enter a name, a valid email and a role.');
     if (db.users.some((x) => x.email === email)) throw httpErr(409, 'Someone already has an account with that email.');
     const password = tempPassword();
     const nu = { id: nextId('users'), name, email, password, role: b.role, mustChange: true, active: true, createdAt: now(), lastLoginAt: null };
     db.users.push(nu);
-    log(null, u.id, 'user_created', `Added ${b.role === 'admin' ? 'Admin' : 'Counsellor'} ${name} (${email})`);
+    log(null, u.id, 'user_created', `Added ${ROLE_NAME[b.role]} ${name} (${email})`);
     db.outbox.unshift({ id: nextId('outbox'), to: [email], subject: 'Your Lehar Portal account', title: 'Welcome to Lehar',
       lines: [`Email: ${email}`, `Temporary password: ${password}`, 'You will be asked to set your own password when you sign in.'], createdAt: now() });
     save();
@@ -361,11 +366,11 @@
     requireRole(u, 'admin');
     const t = db.users.find((x) => x.id === Number(p.id));
     if (!t) throw httpErr(404, 'User not found.');
-    if (b.role !== undefined && !['admin', 'manager'].includes(b.role)) throw httpErr(400, 'Unknown role.');
+    if (b.role !== undefined && !ROLE_KEYS.includes(b.role)) throw httpErr(400, 'Unknown role.');
     if (t.id === u.id && ((b.role && b.role !== 'admin') || b.active === false)) throw httpErr(400, 'You cannot remove your own Admin access.');
     const what = [];
     if (b.name !== undefined && String(b.name).trim() && String(b.name).trim() !== t.name) what.push(`name to ${String(b.name).trim()}`);
-    if (b.role !== undefined && b.role !== t.role) what.push(`role to ${b.role === 'admin' ? 'Admin' : 'Counsellor'}`);
+    if (b.role !== undefined && b.role !== t.role) what.push(`role to ${ROLE_NAME[b.role]}`);
     if (b.active !== undefined && !!b.active !== t.active) what.push(b.active ? 'reactivated' : 'deactivated');
     if (what.length) log(null, u.id, 'user_updated', `${t.name}: ${what.join(', ')}`);
     if (b.name !== undefined) t.name = String(b.name).trim() || t.name;
@@ -402,7 +407,7 @@
   // Phases
   route('GET', '/settings/phases', () => ({ phases: [...db.phases].sort((a, b) => a.sortOrder - b.sortOrder || a.id - b.id) }));
   route('POST', '/settings/phases', (b, q, u) => {
-    requireRole(u, 'admin');
+    requireRole(u, 'admin', 'supervisor');
     const name = String(b.name || '').trim();
     if (!name) throw httpErr(400, 'Enter a phase name.');
     const ph = { id: nextId('phases'), name, sortOrder: Math.max(0, ...db.phases.map((x) => x.sortOrder)) + 1, isVisaResult: false, active: true };
@@ -410,7 +415,7 @@
     return { id: ph.id };
   });
   route('PATCH', '/settings/phases/:id', (b, q, u, p) => {
-    requireRole(u, 'admin');
+    requireRole(u, 'admin', 'supervisor');
     const ph = phaseById(Number(p.id));
     if (!ph) throw httpErr(404, 'Phase not found.');
     if (b.name !== undefined) { const n = String(b.name).trim(); if (!n) throw httpErr(400, 'Phase name cannot be empty.'); ph.name = n; }
@@ -420,13 +425,13 @@
     return { ok: true };
   });
   route('POST', '/settings/phases/reorder', (b, q, u) => {
-    requireRole(u, 'admin');
+    requireRole(u, 'admin', 'supervisor');
     (b.ids || []).forEach((id, i) => { const ph = phaseById(Number(id)); if (ph) ph.sortOrder = i + 1; });
     save();
     return { ok: true };
   });
   route('DELETE', '/settings/phases/:id', (b, q, u, p) => {
-    requireRole(u, 'admin');
+    requireRole(u, 'admin', 'supervisor');
     const id = Number(p.id);
     const used = db.students.some((s) => s.currentPhaseId === id) || db.studentPhases.some((x) => x.phaseId === id);
     if (used) { const ph = phaseById(id); if (ph) ph.active = false; save(); return { ok: true, hidden: true, message: 'This phase has student history, so it was hidden instead of deleted.' }; }
@@ -440,7 +445,7 @@
       .map((x) => ({ ...x, applicationCount: db.applications.filter((a) => a.universityId === x.id).length }))
   }));
   route('POST', '/settings/universities', (b, q, u) => {
-    requireRole(u, 'admin');
+    requireRole(u, 'admin', 'supervisor');
     const name = String(b.name || '').trim();
     const country = String(b.country || '').trim();
     if (!name || !country) throw httpErr(400, 'Enter the university name and country.');
@@ -450,7 +455,7 @@
     return { id: un.id };
   });
   route('PATCH', '/settings/universities/:id', (b, q, u, p) => {
-    requireRole(u, 'admin');
+    requireRole(u, 'admin', 'supervisor');
     const un = uniById(Number(p.id));
     if (!un) throw httpErr(404, 'University not found.');
     if (b.name !== undefined) { if (!String(b.name).trim()) throw httpErr(400, 'Name and country cannot be empty.'); un.name = String(b.name).trim(); }
@@ -460,7 +465,7 @@
     return { ok: true };
   });
   route('DELETE', '/settings/universities/:id', (b, q, u, p) => {
-    requireRole(u, 'admin');
+    requireRole(u, 'admin', 'supervisor');
     const id = Number(p.id);
     if (db.applications.some((a) => a.universityId === id)) { const un = uniById(id); if (un) un.active = false; save(); return { ok: true, hidden: true, message: 'Students have applied here, so it was hidden instead of deleted.' }; }
     db.universities = db.universities.filter((x) => x.id !== id); save();
@@ -479,7 +484,7 @@
     return { students: [...list].sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1)).map(studentListItem) };
   });
   route('POST', '/students', (b, q, u) => {
-    requireRole(u, 'admin', 'manager');
+    requireRole(u, 'admin', 'supervisor', 'manager');
     const f = cleanStudent(b);
     if (!f.fullName || !f.phone) throw httpErr(400, 'Student name and phone are required.');
     let managerId;
@@ -520,7 +525,7 @@
     const changes = Object.keys(f).filter((k) => JSON.stringify(s[k] ?? null) !== JSON.stringify(f[k]))
       .map((k) => (k === 'notes' ? 'notes' : `${LABEL[k] || k.replace(/([A-Z])/g, ' $1').toLowerCase()}: ${short(s[k])} → ${short(f[k])}`));
     let reassigned = false;
-    if (b.managerId !== undefined && u.role === 'admin') {
+    if (b.managerId !== undefined && isStaff(u)) {
       const m = validManager(b.managerId);
       if (m === undefined) throw httpErr(400, 'Choose an active counsellor.');
       if (m !== s.managerId) { f.managerId = m; reassigned = true; changes.push(`counsellor: ${userName(s.managerId) || 'not assigned'} → ${userName(m) || 'not assigned'}`); }
@@ -734,7 +739,7 @@
       leadSources: Object.entries(sources).map(([source, n]) => ({ source, students: n })).sort((a, b) => b.students - a.students)
     };
   }
-  route('GET', '/reports/summary', (b, q, u) => { requireRole(u, 'admin'); return summary(u); });
+  route('GET', '/reports/summary', (b, q, u) => { requireRole(u, 'admin', 'supervisor'); return summary(u); });
   // Activity: recent changes for everyone (their own students), full logs for Admin
   route('GET', '/activity/recent', (b, q, u) => {
     const ids = new Set(visibleStudents(u).map((s) => s.id));
@@ -747,7 +752,7 @@
     && (!/^\d{4}-\d{2}-\d{2}$/.test(q.to || '') || row.createdAt <= `${q.to} 23:59:59`);
   const userRole = (id) => (db.users.find((x) => x.id === id) || {}).role || null;
   route('GET', '/activity/log', (b, q, u) => {
-    requireRole(u, 'admin');
+    requireRole(u, 'admin', 'supervisor');
     const term = String(q.q || '').toLowerCase();
     const studentName = (id) => (db.students.find((s) => s.id === id) || {}).fullName || null;
     const list = db.activity.filter((a) => inRange(a, q) && (!term || String(a.detail || '').toLowerCase().includes(term)
@@ -757,13 +762,13 @@
       action: a.action, detail: a.detail, userId: a.userId, userName: userName(a.userId), userRole: userRole(a.userId), createdAt: a.createdAt })) };
   });
   route('GET', '/activity/logins', (b, q, u) => {
-    requireRole(u, 'admin');
+    requireRole(u, 'admin', 'supervisor');
     const list = (db.logins || []).filter((l) => inRange(l, q) && (!['login', 'logout', 'failed'].includes(q.event) || l.event === q.event)).sort((a, b) => b.id - a.id);
     const limit = Math.min(Number(q.limit) || 50, 200), offset = Math.max(Number(q.offset) || 0, 0);
     return { total: list.length, items: list.slice(offset, offset + limit).map((l) => ({ ...l, userName: userName(l.userId), userRole: userRole(l.userId) })) };
   });
   route('GET', '/activity/counsellors', (b, q, u) => {
-    requireRole(u, 'admin');
+    requireRole(u, 'admin', 'supervisor');
     const today = L.todayIST();
     return { counsellors: db.users.filter((x) => x.role === 'manager')
       .map((x) => {
@@ -777,7 +782,7 @@
       .sort((a, c) => (c.active - a.active) || String(c.lastLoginAt || '').localeCompare(String(a.lastLoginAt || '')) || a.name.localeCompare(c.name)) };
   });
   route('POST', '/students/assign', (b, q, u) => {
-    requireRole(u, 'admin');
+    requireRole(u, 'admin', 'supervisor');
     const ids = [...new Set((Array.isArray(b.studentIds) ? b.studentIds : []).map(Number).filter(Boolean))];
     if (!ids.length) throw httpErr(400, 'Choose at least one student.');
     const managerId = validManager(b.managerId);
@@ -803,14 +808,14 @@
   const readOf = (userId, cid) => (db.chatReads || {})[`${userId}:${cid}`] || 0;
   const setRead = (userId, cid, id) => { db.chatReads = db.chatReads || {}; const k = `${userId}:${cid}`; db.chatReads[k] = Math.max(db.chatReads[k] || 0, id); };
   const unreadIn = (u, cid) => (db.chat || []).filter((m) => m.counsellorId === cid && m.id > readOf(u.id, cid)
-    && (u.role === 'admin' ? m.senderId === cid : m.senderId !== u.id)).length;
+    && (isStaff(u) ? m.senderId === cid : m.senderId !== u.id)).length;
   const chatMsg = (m) => { const s2 = db.users.find((x) => x.id === m.senderId); return { ...m, senderName: s2 ? s2.name : 'Former user', senderRole: s2 ? s2.role : null }; };
   route('GET', '/chat/unread', (b, q, u) => {
-    const cids = u.role === 'admin' ? db.users.filter((x) => x.role === 'manager').map((x) => x.id) : [u.id];
+    const cids = isStaff(u) ? db.users.filter((x) => x.role === 'manager').map((x) => x.id) : [u.id];
     return { total: cids.reduce((n, cid) => n + unreadIn(u, cid), 0) };
   });
   route('GET', '/chat/threads', (b, q, u) => {
-    requireRole(u, 'admin');
+    requireRole(u, 'admin', 'supervisor');
     const threads = db.users.filter((x) => x.role === 'manager').map((c) => {
       const msgs = (db.chat || []).filter((m) => m.counsellorId === c.id);
       const last = msgs[msgs.length - 1];
@@ -827,8 +832,8 @@
     let rows;
     if (Number(q.after)) rows = all.filter((m) => m.id > Number(q.after)).slice(0, limit);
     else { const pool = Number(q.before) ? all.filter((m) => m.id < Number(q.before)) : all; rows = pool.slice(-limit); }
-    const otherReadId = u.role === 'admin' ? readOf(c.id, c.id)
-      : Math.max(0, ...db.users.filter((x) => x.role === 'admin').map((a) => readOf(a.id, c.id)));
+    const otherReadId = isStaff(u) ? readOf(c.id, c.id)
+      : Math.max(0, ...db.users.filter((x) => isStaff(x)).map((a) => readOf(a.id, c.id)));
     return { counsellor: { id: c.id, name: c.name, email: c.email, active: c.active }, messages: rows.map(chatMsg), otherReadId,
       hasOlder: !Number(q.after) && rows.length > 0 && all.some((m) => m.id < rows[0].id) };
   });
@@ -850,7 +855,7 @@
     if (Number(b.lastId) > 0) { setRead(u.id, c.id, Number(b.lastId)); save(); }
     return { ok: true };
   });
-  route('GET', '/demo/outbox', (b, q, u) => { requireRole(u, 'admin'); return { emails: db.outbox }; });
+  route('GET', '/demo/outbox', (b, q, u) => { requireRole(u, 'admin', 'supervisor'); return { emails: db.outbox }; });
 
   /* ---------- Dispatcher ---------- */
   async function request(method, fullPath, body) {
@@ -931,7 +936,7 @@
     exportExcel() {
       if (!db) load();
       const u = sessionUser();
-      if (!u || u.role !== 'admin') return L.toast('Only Admin can export.', 'err');
+      if (!u || !isStaff(u)) return L.toast('Only Admin and Manager can export.', 'err');
       const sum = summary(u);
       const ph = (id) => (phaseById(id) || {}).name || '';
       L.xlsx.download(`lehar-export-${L.todayIST()}.xlsx`, [
@@ -965,6 +970,7 @@
     reset() { localStorage.removeItem(KEY); sessionStorage.removeItem(SESSION_KEY); db = null; load(); },
     accounts: () => [
       { label: 'Admin', email: 'admin@icsoln.com', password: 'Admin123', note: 'Full access' },
+      { label: 'Manager', email: 'manager@icsoln.com', password: 'Manager123', note: 'Like Admin, without users or deleting' },
       { label: 'Counsellor', email: 'counsellor@icsoln.com', password: 'Counsellor123', note: 'Only students assigned to them' }
     ]
   };

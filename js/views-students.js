@@ -70,7 +70,7 @@
 
     el.innerHTML = `
       <div class="page-head">
-        <div><h1>${u.role === 'admin' ? 'Students' : 'My students'}</h1><p class="sub">${u.role === 'manager' ? 'Students the Admin has assigned to you' : 'Every student and lead. Tick students to assign them to a counsellor.'}</p></div>
+        <div><h1>${L.isStaff(u) ? 'Students' : 'My students'}</h1><p class="sub">${u.role === 'manager' ? 'Students the Admin has assigned to you' : 'Every student and lead. Tick students to assign them to a counsellor.'}</p></div>
         <div class="actions">${L.can.addLead(u) ? `<button class="btn btn-primary" data-add>${L.icon('plus')}Add lead</button>` : ''}</div>
       </div>
       <section class="card">
