@@ -33,7 +33,7 @@
       <div class="card-head"><h2>${esc(title)}</h2></div>
       ${activity.length ? `<ul class="timeline card-body">${activity.map((a) => `<li>
           <span class="when">${esc(L.fmtDateTime(a.createdAt))}</span>
-          <span><a href="#/students/${a.studentId}" class="cell-title">${esc(a.studentName || '')}</a> — ${L.activityText(a)}</span></li>`).join('')}</ul>`
+          <span><a href="#/students/${a.studentId}" class="cell-title">${esc(a.studentName || '')}</a>: ${esc(a.detail || a.action)} <span class="by">by ${esc(a.userName || 'someone')}</span></span></li>`).join('')}</ul>`
         : '<p class="empty">No changes yet.</p>'}
     </section>`;
   }

@@ -228,10 +228,12 @@ a.bar-row:hover .fill { background: var(--navy); }
 .tag-current { font-size: 11px; font-weight: 700; color: #0B5F5B; background: #D7F3F1; border-radius: 4px; padding: 1px 6px; text-transform: uppercase; letter-spacing: .04em; }
 
 .timeline { list-style: none; margin: 0; padding: 0; }
-.timeline li { padding: 10px 0; border-bottom: 1px solid var(--line-2); display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 12px; }
+.timeline li { padding: 12px 0; border-bottom: 1px solid var(--line-2); display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 16px; align-items: baseline; line-height: 1.5; }
+.timeline.card-body { padding: 4px 20px 8px; } /* the card's own side padding, so text does not touch the edges */
 .timeline li:last-child { border-bottom: 0; }
 .timeline .when { color: var(--soft); font-size: 12px; }
 .timeline .who { font-weight: 600; color: var(--navy); }
+.timeline .by { color: var(--soft); font-size: 13px; white-space: nowrap; }
 
 .details-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 24px; margin: 0; }
 .details-list dt { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
@@ -321,7 +323,8 @@ a.bar-row:hover .fill { background: var(--navy); }
   .page { padding: 16px; }
   .grid-2, .grid-3, .form-grid, .details-list { grid-template-columns: minmax(0, 1fr); }
   .journey .step-edit { grid-template-columns: minmax(0, 1fr); }
-  .timeline li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .timeline li { grid-template-columns: minmax(0, 1fr); gap: 4px; padding: 12px 0; }
+  .timeline.card-body { padding: 4px 16px 8px; }
   .bar-row { grid-template-columns: 110px minmax(0, 1fr) 32px; }
   .hide-sm { display: none; }
 }

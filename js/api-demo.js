@@ -3,7 +3,7 @@
    so the demo behaves like the real portal. Emails go to a "Demo outbox" page instead of being sent. */
 (function () {
   const L = (window.L = window.L || {});
-  const KEY = 'lehar-demo-v6';
+  const KEY = 'lehar-demo-v7';
   const SESSION_KEY = 'lehar-demo-session';
   const MAX_STORED_FILE = 1.5 * 1024 * 1024;
   const MAX_UPLOAD = 10 * 1024 * 1024;
@@ -39,7 +39,7 @@
     return d.toISOString().slice(0, 19).replace('T', ' ');
   }
   function seed() {
-    const s = { v: 6, seq: {}, users: [], phases: [], universities: [], students: [], studentPhases: [], applications: [], documents: [], activity: [], logins: [], chat: [], chatReads: {}, outbox: [], otps: [] };
+    const s = { v: 7, seq: {}, users: [], phases: [], universities: [], students: [], studentPhases: [], applications: [], documents: [], activity: [], logins: [], chat: [], chatReads: {}, outbox: [], otps: [] };
     const id = (t) => (s.seq[t] = (s.seq[t] || 0) + 1);
     const user = (name, email, password, role) => { const u = { id: id('users'), name, email, password, role, mustChange: false, active: true, createdAt: daysAgo(60), lastLoginAt: null }; s.users.push(u); return u; };
     // The three demo logins
@@ -124,7 +124,7 @@
       s.applications.push({ id: id('applications'), studentId: st.id, universityId: U(uni), course, intake, status,
         appliedOn: applied ? daysAgo(applied).slice(0, 10) : null, decisionOn: decided ? daysAgo(decided).slice(0, 10) : null, note: null,
         updatedBy: st.managerId || admin.id, createdAt: daysAgo(applied || 1), updatedAt: daysAgo(decided || applied || 1) });
-      log(st.id, st.managerId || admin.id, 'application_added', `Application added: ${uni} — Applied`, daysAgo(applied || 1));
+      log(st.id, st.managerId || admin.id, 'application_added', `Application added: ${uni}, Applied`, daysAgo(applied || 1));
       if (status !== 'applied') log(st.id, st.managerId || admin.id, 'application_status', `${uni}: Applied → ${STATUS_LABEL[status]}`, daysAgo(decided || 1));
     };
     app('Sneha Kulkarni', 'Arizona State University', 'applied', 'MS Business Analytics', 'Fall 2027', 10);
@@ -577,7 +577,7 @@
     if (!row) { row = { studentId: s.id, phaseId: ph.id }; db.studentPhases.push(row); }
     Object.assign(row, { status: b.status, note, updatedBy: u.id, updatedAt: now() });
     if (prevStatus !== b.status || prevNote !== note) {
-      const detail = `${ph.name}: ${STATUS_LABEL[prevStatus]} → ${STATUS_LABEL[b.status]}${note ? ` — “${note}”` : ''}`;
+      const detail = `${ph.name}: ${STATUS_LABEL[prevStatus]} → ${STATUS_LABEL[b.status]}${note ? `: “${note}”` : ''}`;
       log(s.id, u.id, 'phase_status', detail);
       if (prevStatus !== b.status) {
         const important = ph.isVisaResult && (b.status === 'approved' || b.status === 'rejected');
@@ -610,7 +610,7 @@
     const a = { id: nextId('applications'), studentId: s.id, universityId: un.id, course: null, intake: null, status: 'applied', appliedOn: null, decisionOn: null, note: null,
       ...f, updatedBy: u.id, createdAt: now(), updatedAt: now() };
     db.applications.push(a);
-    const detail = `Application added: ${un.name} (${un.country}) — ${STATUS_LABEL[a.status]}`;
+    const detail = `Application added: ${un.name} (${un.country}), ${STATUS_LABEL[a.status]}`;
     log(s.id, u.id, 'application_added', detail);
     notify({ student: s, actor: u, subject: `Application: ${un.name}`, title: 'Application added', lines: [detail], important: a.status !== 'applied' });
     save();
@@ -680,7 +680,7 @@
     if (b.status === 'rejected' && !comment) throw httpErr(400, 'Add a comment saying why it was rejected.');
     Object.assign(d, { status: b.status, reviewComment: comment, reviewedBy: u.id, reviewedAt: now() });
     const label = { approved: 'Approved', rejected: 'Rejected', pending: 'Back to pending' }[b.status];
-    const detail = `${d.docType} (${d.originalName}): ${label}${comment ? ` — “${comment}”` : ''}`;
+    const detail = `${d.docType} (${d.originalName}): ${label}${comment ? `: “${comment}”` : ''}`;
     log(s.id, u.id, 'document_reviewed', detail);
     notify({ student: s, actor: u, subject: `${d.docType} ${label.toLowerCase()}`, title: 'Document reviewed', lines: [detail] });
     save();
