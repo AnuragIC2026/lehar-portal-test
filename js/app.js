@@ -159,6 +159,7 @@
         ${L.isDemo ? `<div class="demo-bar"><strong>Demo</strong><span>Sample data stays in this browser. Emails appear in the Demo outbox instead of being sent.</span>
           <button class="btn btn-sm" data-action="reset-demo">Reset demo data</button></div>` : ''}
         <main class="page" id="main"></main>
+        ${L.wavesBackground('app-waves')}
       </div>
     </div>`;
   }

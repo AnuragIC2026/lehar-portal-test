@@ -38,7 +38,8 @@
     return d;
   }
 
-  L.wavesBackground = function () {
+  // cls: 'auth-waves' fills the sign-in background, 'app-waves' is the band at the bottom of every page
+  L.wavesBackground = function (cls = 'auth-waves') {
     const W = 2880; // two periods of 1440 so the slide loops cleanly
     const layers = [
       { h: 300, base: 60, amp: 24, len: 720, phase: 0, fill: '#CDEBFA', foam: 0.0, dur: 46, rev: false, height: '62%' },
@@ -47,7 +48,7 @@
       { h: 300, base: 80, amp: 22, len: 480, phase: 200, fill: '#2179C8', foam: 0.6, dur: 20, rev: true, height: '30%' },
       { h: 300, base: 85, amp: 16, len: 360, phase: 90, fill: '#1C3F94', foam: 0.45, dur: 16, rev: false, height: '18%' }
     ];
-    return `<div class="auth-waves" aria-hidden="true">${layers.map((l, i) => {
+    return `<div class="${cls}" aria-hidden="true">${layers.map((l, i) => {
       const p = wavePath(W, l.h, l.base, l.amp, l.len, l.phase);
       const foam = l.foam ? `<path d="${foamCaps(W, l)}" fill="none" stroke="#FFFFFF" stroke-opacity="${l.foam}" stroke-width="7" stroke-linecap="round"/>
         <path d="${foamStreaks(W, l)}" fill="none" stroke="#FFFFFF" stroke-opacity="${(l.foam * 0.5).toFixed(2)}" stroke-width="3" stroke-linecap="round"/>` : '';
