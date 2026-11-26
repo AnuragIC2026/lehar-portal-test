@@ -148,19 +148,21 @@
   }
   function shellHtml(user) {
     return `<div class="shell" data-uid="${esc(user.id)}">
+      <div class="side-col"><div class="side-track">
       <aside class="sidebar" aria-label="Main menu">
         <div class="brand"><a href="#/dashboard" aria-label="Lehar home">${L.logo({ variant: 'white', width: 150 })}</a><div class="by">An initiative of Samudra Global</div></div>
         <nav class="nav" data-nav-links>${navLinks(user)}</nav>
         <div class="me" data-me>${meHtml(user)}</div>
       </aside>
+      </div><div class="side-foot"></div></div>
       <div class="main">
         <div class="topbar"><button class="icon-btn" data-action="open-nav" aria-label="Open menu">${L.icon('menu')}</button>
           <a href="#/dashboard" aria-label="Lehar home">${L.logo({ variant: 'white', width: 76, className: 'logo' })}</a></div>
         ${L.isDemo ? `<div class="demo-bar"><strong>Demo</strong><span>Sample data stays in this browser. Emails appear in the Demo outbox instead of being sent.</span>
           <button class="btn btn-sm" data-action="reset-demo">Reset demo data</button></div>` : ''}
         <main class="page" id="main"></main>
-        ${L.wavesBackground('app-waves')}
       </div>
+      ${L.wavesBackground('app-waves')}
     </div>`;
   }
   function navLinks(user) {
