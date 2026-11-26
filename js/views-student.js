@@ -34,7 +34,7 @@
             </div>
             <div class="row">
               ${canEdit ? `<button class="btn" data-act="move">${L.icon('arrow')}Move phase</button><button class="btn" data-act="edit">${L.icon('edit')}Edit details</button>` : ''}
-              ${L.can.delete(u) ? `<button class="btn btn-danger" data-act="delete">${L.icon('trash')}Delete</button>` : ''}
+              ${L.can.deleteStudent(u) ? `<button class="btn btn-danger" data-act="delete">${L.icon('trash')}Delete</button>` : ''}
             </div>
           </div>
           <div class="tabs" role="tablist" aria-label="Student sections">

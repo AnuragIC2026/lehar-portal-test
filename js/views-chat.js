@@ -30,7 +30,7 @@
     let threads = [];
 
     el.innerHTML = `
-      <div class="page-head"><div><h1>Messages</h1><p class="sub">${isAdmin ? 'One private chat with each counsellor. Admins and Managers can read and reply.' : 'Your chat with the Admin team'}</p></div></div>
+      <div class="page-head"><div><h1>Messages</h1><p class="sub">${isAdmin ? 'One private chat with each counsellor.' : 'Your chat with the Admin team'}</p></div></div>
       <section class="card chat-shell${isAdmin ? ' with-list' : ''}${isAdmin && cid ? ' has-open' : ''}">
         ${isAdmin ? '<aside class="chat-list" aria-label="Conversations" data-list><div class="empty">Loading…</div></aside>' : ''}
         <div class="chat-main" data-main><div class="empty">Loading…</div></div>
@@ -110,7 +110,7 @@
       const res = await L.api.get(`/chat/threads/${cid}/messages`);
       counsellor = res.counsellor; messages = res.messages; otherReadId = res.otherReadId; hasOlder = res.hasOlder;
       const title = isAdmin ? counsellor.name : 'Admin team';
-      const sub = isAdmin ? `Counsellor · ${counsellor.email}` : 'Admins and Managers can read and reply';
+      const sub = isAdmin ? `Counsellor · ${counsellor.email}` : 'Admin team';
       mainEl.innerHTML = `
         <div class="chat-head">
           ${isAdmin ? '<a href="#/messages" class="icon-btn chat-back" aria-label="Back to all conversations">' + L.icon('arrow').replace('<svg ', '<svg style="transform:rotate(180deg)" ') + '</a>' : ''}

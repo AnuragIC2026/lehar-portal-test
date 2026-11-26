@@ -10,7 +10,7 @@ This repository holds the **demo** only. On GitHub Pages it runs entirely in the
 | Manager | manager@icsoln.com | Manager123 |
 | Counsellor | counsellor@icsoln.com | Counsellor123 |
 
-A Manager can do everything an Admin does except add, change or remove users, and delete. A Counsellor sees only the students assigned to them and has no reports.
+A Manager can do everything an Admin does except add, change or remove users. A Counsellor sees only the students assigned to them and has no reports.
 
 The sample data also includes a second counsellor (priya@icsoln.com / Counsellor123) and sample sign-in history for the Activity log.
 

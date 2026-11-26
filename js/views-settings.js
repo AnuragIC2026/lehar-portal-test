@@ -20,13 +20,8 @@
     const { users } = await L.api.get('/users');
     const isAdmin = me.role === 'admin'; // Managers get a read-only list of the Counsellors
     el.innerHTML = `
-      <div class="page-head"><div><h1>${isAdmin ? 'Users' : 'Counsellors'}</h1><p class="sub">${isAdmin ? 'Who can sign in, and what they can do' : 'Read only. Only the Admin can add, change or remove people.'}</p></div>
+      <div class="page-head"><div><h1>${isAdmin ? 'Users' : 'Counsellors'}</h1><p class="sub">${isAdmin ? 'Who can sign in, and what they can do' : 'Your counsellors and their recent activity'}</p></div>
         ${isAdmin ? `<div class="actions"><button class="btn btn-primary" data-add>${L.icon('plus')}Add user</button></div>` : ''}</div>
-      <section class="card" style="margin-bottom:16px"><div class="card-body grid grid-3" style="gap:16px">
-        <div>${L.roleBadge('admin')}<p class="small muted" style="margin-top:6px">Everything: all students, assigning students to counsellors, reports, the activity log, users, settings, deleting and Excel export.</p></div>
-        <div>${L.roleBadge('supervisor')}<p class="small muted" style="margin-top:6px">Everything an Admin does except adding, changing or removing users, and deleting. Sees all students and assigns them, sees reports, the Counsellors and their sign-ins and changes, edits phases and universities, and joins every counsellor chat.</p></div>
-        <div>${L.roleBadge('manager')}<p class="small muted" style="margin-top:6px">Only the students assigned to them: add and edit leads, move phases, set statuses, applications, upload and review documents. No reports, no deleting.</p></div>
-      </div></section>
       <section class="card"><div class="table-wrap"><table><caption class="sr-only">Users</caption>
         <thead><tr><th>Name</th><th>Role</th><th class="num">Students</th><th class="hide-sm">Last sign-in</th><th class="num hide-sm">Sign-ins (30 days)</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
         <tbody>${users.map((x) => `<tr>

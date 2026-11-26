@@ -187,7 +187,8 @@
     manageUsers: (u) => u.role === 'admin',
     addLead: (u) => L.isStaff(u) || u.role === 'manager',
     editStudent: (u, s) => L.isStaff(u) || (u.role === 'manager' && s && s.managerId === u.id),
-    delete: (u) => u.role === 'admin',
+    delete: (u) => u.role === 'admin', // applications and documents
+    deleteStudent: (u) => L.isStaff(u),
     export: (u) => L.isStaff(u),
     assignManager: (u) => L.isStaff(u),
     seeAllStudents: (u) => L.isStaff(u),

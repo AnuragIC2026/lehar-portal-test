@@ -538,7 +538,7 @@
     return { student: studentListItem(s) };
   });
   route('DELETE', '/students/:id', (b, q, u, p) => {
-    requireRole(u, 'admin');
+    requireRole(u, 'admin', 'supervisor');
     const s = studentFor(u, p.id);
     db.students = db.students.filter((x) => x.id !== s.id);
     db.studentPhases = db.studentPhases.filter((x) => x.studentId !== s.id);
@@ -938,7 +938,7 @@
     exportExcel() {
       if (!db) load();
       const u = sessionUser();
-      if (!u || !isStaff(u)) return L.toast('Only Admin and Manager can export.', 'err');
+      if (!u || !isStaff(u)) return L.toast('You do not have access to export.', 'err');
       const sum = summary(u);
       const ph = (id) => (phaseById(id) || {}).name || '';
       L.xlsx.download(`lehar-export-${L.todayIST()}.xlsx`, [
@@ -971,9 +971,9 @@
     },
     reset() { localStorage.removeItem(KEY); sessionStorage.removeItem(SESSION_KEY); db = null; load(); },
     accounts: () => [
-      { label: 'Admin', email: 'admin@icsoln.com', password: 'Admin123', note: 'Full access' },
-      { label: 'Manager', email: 'manager@icsoln.com', password: 'Manager123', note: 'Like Admin, without users or deleting' },
-      { label: 'Counsellor', email: 'counsellor@icsoln.com', password: 'Counsellor123', note: 'Only students assigned to them' }
+      { label: 'Admin', email: 'admin@icsoln.com', password: 'Admin123', note: '' },
+      { label: 'Manager', email: 'manager@icsoln.com', password: 'Manager123', note: '' },
+      { label: 'Counsellor', email: 'counsellor@icsoln.com', password: 'Counsellor123', note: '' }
     ]
   };
 })();

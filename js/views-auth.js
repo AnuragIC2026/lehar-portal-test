@@ -70,7 +70,7 @@
 
   L.views.login = async (el) => {
     const demo = L.isDemo ? `<div class="demo-accounts"><span class="label-text">Demo accounts</span>
-      <div class="list">${L.apiDemo.accounts().map((a) => `<button type="button" class="btn" data-demo="${esc(a.email)}" data-pass="${esc(a.password)}"><span class="acc-top"><span>${esc(a.label)}</span><span class="soft small">${esc(a.note)}</span></span><span class="acc-cred">${esc(a.email)} / ${esc(a.password)}</span></button>`).join('')}</div></div>` : '';
+      <div class="list">${L.apiDemo.accounts().map((a) => `<button type="button" class="btn" data-demo="${esc(a.email)}" data-pass="${esc(a.password)}"><span class="acc-top"><span>${esc(a.label)}</span>${a.note ? `<span class="soft small">${esc(a.note)}</span>` : ''}</span><span class="acc-cred">${esc(a.email)} / ${esc(a.password)}</span></button>`).join('')}</div></div>` : '';
     el.innerHTML = card(`<h1 class="sr-only">Sign in</h1>
       <form data-form novalidate>
         <div class="notice err" data-msg hidden></div>
